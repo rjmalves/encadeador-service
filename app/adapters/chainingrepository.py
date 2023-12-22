@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Union, Callable
 import pandas as pd
 from idecomp.decomp.dadger import Dadger
+from idecomp.decomp.modelos.dadger import VI
 from idecomp.decomp.modelos.dadgnl import NL, GL
 
 from app.models.program import Program
@@ -96,7 +97,7 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
             # TODO - voltar a suportar caso de NW semanal
             # if self._caso_atual.revisao == 0:
             if True:
-                return "Estágio 1"
+                return "estagio_1"
             else:
                 return list(volumes.columns)[-2]
 
@@ -104,13 +105,19 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
             volumes: pd.DataFrame, usinas: pd.DataFrame
         ) -> pd.DataFrame:
             vol = float(
-                volumes.loc[volumes["Número"] == 44, __coluna_para_encadear()]
+                volumes.loc[
+                    volumes["codigo_usina"] == 44, __coluna_para_encadear()
+                ]
             )
             Log.log().info(f"Caso especial de I. Solteira Equiv: {vol} %")
-            usinas.loc[usinas["Número"] == 34, "Volume Inicial"] = vol
-            usinas.loc[usinas["Número"] == 43, "Volume Inicial"] = vol
-            results.append(ChainingResult(id=hidr.at[34, "Nome"], value=vol))
-            results.append(ChainingResult(id=hidr.at[43, "Nome"], value=vol))
+            usinas.loc[usinas["codigo_usina"] == 34, "inicial"] = vol
+            usinas.loc[usinas["codigo_usina"] == 43, "inicial"] = vol
+            results.append(
+                ChainingResult(id=hidr.at[34, "nome_usina"], value=vol)
+            )
+            results.append(
+                ChainingResult(id=hidr.at[43, "nome_usina"], value=vol)
+            )
             return usinas
 
         def __correcao_serra_mesa_ficticia(vol: float) -> float:
@@ -121,8 +128,8 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
         ) -> bool:
             # Saber se tem I. Solteira Equiv. no DECOMP mas tem as
             # usinas separadas no NEWAVE
-            usinas_newave = usinas["Número"].tolist()
-            usinas_decomp = volumes["Número"].tolist()
+            usinas_newave = usinas["codigo_usina"].tolist()
+            usinas_decomp = volumes["codigo_usina"].tolist()
             return all(
                 [
                     44 not in usinas_newave,
@@ -169,26 +176,33 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
         results: List[ChainingResult] = []
         # Atualiza cada armazenamento
         for _, linha in usinas.iterrows():
-            num = linha["Número"]
+            num = linha["codigo_usina"]
             num_dc = __numero_uhe_decomp(num)
             # Confere se tem o reservatório
-            if num_dc not in set(volumes["Número"]):
+            if num_dc not in set(volumes["codigo_usina"]):
                 continue
             vol = float(
                 volumes.loc[
-                    volumes["Número"] == num_dc, __coluna_para_encadear()
+                    volumes["codigo_usina"] == num_dc, __coluna_para_encadear()
                 ]
             )
             if num_dc == SERRA_MESA_FICT_DC:
                 vf = __correcao_serra_mesa_ficticia(vol)
                 num_nw = SERRA_MESA_FICT_NW
-                usinas.loc[usinas["Número"] == num_nw, "Volume Inicial"] = vf
+                usinas.loc[
+                    usinas["codigo_usina"] == num_nw,
+                    "volume_inicial_percentual",
+                ] = vf
                 results.append(
-                    ChainingResult(id=hidr.at[num_nw, "Nome"], value=vf)
+                    ChainingResult(id=hidr.at[num_nw, "nome_usina"], value=vf)
                 )
 
-            usinas.loc[usinas["Número"] == num, "Volume Inicial"] = vol
-            results.append(ChainingResult(id=hidr.at[num, "Nome"], value=vol))
+            usinas.loc[
+                usinas["codigo_usina"] == num, "volume_inicial_percentual"
+            ] = vol
+            results.append(
+                ChainingResult(id=hidr.at[num, "nome_usina"], value=vol)
+            )
 
         # Trata o caso de I. Solteira Equiv.
         if __separou_ilha_solteira_equiv(volumes, usinas):
@@ -244,7 +258,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
         ) -> bool:
             # Saber se tem I. Solteira Equiv. no DECOMP mas tem as
             # usinas separadas no próximo DECOMP
-            vols_relato = volumes["Número"].tolist()
+            vols_relato = volumes["codigo_usina"].tolist()
 
             existe_equiv_relato = 44 in vols_relato
             existem_separadas_relato = all(
@@ -266,12 +280,18 @@ class DECOMPChainingRepository(AbstractChainingRepository):
         def __encadeia_ilha_solteira_equiv(
             volumes: pd.DataFrame, dadger: Dadger
         ):
-            vol = float(volumes.loc[volumes["Número"] == 44, "Estágio 1"])
+            vol = float(
+                volumes.loc[volumes["codigo_usina"] == 44, "estagio_1"]
+            )
             Log.log().info(f"Caso especial de I. Solteira Equiv: {vol} %")
             dadger.uh(34).volume_inicial = vol
             dadger.uh(43).volume_inicial = vol
-            results.append(ChainingResult(id=hidr.at[34, "Nome"], value=vol))
-            results.append(ChainingResult(id=hidr.at[43, "Nome"], value=vol))
+            results.append(
+                ChainingResult(id=hidr.at[34, "nome_usina"], value=vol)
+            )
+            results.append(
+                ChainingResult(id=hidr.at[43, "nome_usina"], value=vol)
+            )
 
         with last_decomp_uow:
             relato = last_decomp_uow.files.get_relato()
@@ -291,16 +311,20 @@ class DECOMPChainingRepository(AbstractChainingRepository):
         results: List[ChainingResult] = []
         # Encadeia cada armazenamento
         for _, linha in volumes.iterrows():
-            num = linha["Número"]
+            num = linha["codigo_usina"]
 
             # Caso especial de I. Solteira Equiv.
             if num == 44 and __separou_ilha_solteira_equiv(volumes, dadger):
                 __encadeia_ilha_solteira_equiv(volumes, dadger)
                 continue
 
-            vol = float(volumes.loc[volumes["Número"] == num, "Estágio 1"])
+            vol = float(
+                volumes.loc[volumes["codigo_usina"] == num, "estagio_1"]
+            )
             dadger.uh(num).volume_inicial = vol
-            results.append(ChainingResult(id=hidr.at[num, "Nome"], value=vol))
+            results.append(
+                ChainingResult(id=hidr.at[num, "nome_usina"], value=vol)
+            )
 
         with destination_uow:
             res = destination_uow.files.set_dadger(dadger)
@@ -346,16 +370,16 @@ class DECOMPChainingRepository(AbstractChainingRepository):
             # Extrai o Qdef do relato
             qdef = float(
                 relatorio.loc[
-                    (relatorio["Estágio"] == 1)
-                    & (relatorio["Código"] == codigo),
-                    "Qdef (m3/s)",
+                    (relatorio["estagio"] == 1)
+                    & (relatorio["codigo_usina"] == codigo),
+                    "vazao_defluente_m3s",
                 ]
             )
             # Atualiza os tempos de viagem no dadger
-            vi = dadger_ant.vi(codigo)
-            dadger.vi(codigo).vazoes = [qdef] + vi.vazoes[:-1]
+            vi: VI = dadger_ant.vi(codigo)
+            dadger.vi(codigo).vazao = [qdef] + vi.vazao[:-1]
             results.append(
-                ChainingResult(id=hidr.at[codigo, "Nome"], value=qdef)
+                ChainingResult(id=hidr.at[codigo, "nome_usina"], value=qdef)
             )
 
         with destination_uow:
@@ -370,7 +394,6 @@ class DECOMPChainingRepository(AbstractChainingRepository):
         sources_uow: List[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
     ) -> Union[List[ChainingResult], HTTPResponse]:
-
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
             return HTTPResponse(
@@ -392,12 +415,12 @@ class DECOMPChainingRepository(AbstractChainingRepository):
         if isinstance(dad, HTTPResponse):
             return dad
 
-        cods = rel.usinas_termicas["Código"].unique()
-        usinas = rel.usinas_termicas["Usina"].unique()
+        cods = rel.usinas_termicas["codigo_usina"].unique()
+        usinas = rel.usinas_termicas["nome_usina"].unique()
         mapa_codigo_usina = {c: u for c, u in zip(cods, usinas)}
 
         registros_nl: List[NL] = dad.nl()
-        codigos = [r.codigo for r in registros_nl]
+        codigos = [r.codigo_usina for r in registros_nl]
         registros: List[GL] = dad.gl()
         registros_anteriores: List[GL] = dad_anterior.gl()
         results: List[ChainingResult] = []
@@ -405,14 +428,14 @@ class DECOMPChainingRepository(AbstractChainingRepository):
             # Para cada semana i (exceto a última), o registro GL do DadGNL do
             # caso atual deve ter o valor do respectivo registro GL do DadGNL
             # do caso anterior na semana i + 1
-            registros_usina = [r for r in registros if r.codigo == c]
+            registros_usina = [r for r in registros if r.codigo_usina == c]
             registros_usina_anterior = [
-                r for r in registros_anteriores if r.codigo == c
+                r for r in registros_anteriores if r.codigo_usina == c
             ]
             # Se a usina não existia no deck anterior, ignora
             if len(registros_usina_anterior) == 0:
                 continue
-            cols_despacho = [f"Despacho Pat. {i}" for i in [1, 2, 3]]
+            cols_despacho = [f"geracao_patamar_{i}" for i in [1, 2, 3]]
             for r in registros_usina:
                 # Para a última semana, o registro GL do DadGNL atual deve vir
                 # do RelGNL do caso anterior, onde a semana de início tenha o
@@ -429,11 +452,11 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                     # Procura pela linha em op filtrando por nome, data
                     # e pegando as colunas dos despachos
                     nome = mapa_codigo_usina[c]
-                    filtro = (op["Usina"] == nome) & (
-                        op["Início Semana"] == data
+                    filtro = (op["nome_usina"] == nome) & (
+                        op["data_inicio_semana"] == data
                     )
                     geracoes = op.loc[filtro, cols_despacho].to_numpy()
-                    r.geracoes = [g for g in geracoes[0]]
+                    r.geracao = [g for g in geracoes[0]]
                     results.append(ChainingResult(id=nome, value=geracoes[-1]))
                 else:
                     # Procura pelo registro anterior com a mesma data
@@ -442,7 +465,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                         for ra in registros_usina_anterior
                         if ra.data_inicio == r.data_inicio
                     ][0]
-                    r.geracoes = reg_ant.geracoes
+                    r.geracao = reg_ant.geracao
 
         with destination_uow:
             res = destination_uow.files.set_dadgnl(dad)
