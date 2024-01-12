@@ -69,7 +69,7 @@ Atualmente é suportado encadear até 4 variáveis operativas, não necessariame
 
 ### Volume Armazenado (VARM)
 
-É assumido que, no ponto inicial do backtest, os volumes iniciais dos modelos são compatíveis. A implementação atual suporta o caso mais comum de execuções mensais de NEWAVE e semanais de DECOMP. Os volumes encadeados são sempre resultados de execuções de DECOMP, valores finais de primeira semana de estudo.
+É assumido que, no ponto inicial de um estudo encadeado (por exemplo, um backtest), os volumes iniciais dos modelos são compatíveis. A implementação atual suporta o caso mais comum de execuções mensais de NEWAVE e semanais de DECOMP. Os volumes encadeados são sempre resultados de execuções de DECOMP, correspondentes aos valores finais de primeira semana de estudo.
 
 Encadeamentos suportados:
 
@@ -156,7 +156,7 @@ def __encadeia_ilha_solteira_equiv(
 
 ### Tempo de Viagem da Água (TVIAGEM)
 
-O tempo de viagem de água atualmente só é suportado no modelo DECOMP, por meio dos registros `VI` no arquivo `dadger.rvX`. Logo, apenas é suportado o encadeamento de `TVIAGEM` entre execuções do modelo DECOMP. O tempo de viagem é representado apenas para as usinas de Três Marias (156) e XXX (162).
+O tempo de viagem de água atualmente só é suportado no modelo DECOMP, por meio dos registros `VI` no arquivo `dadger.rvX`. Logo, apenas é suportado o encadeamento de `TVIAGEM` entre execuções do modelo DECOMP. O tempo de viagem é representado apenas para as usinas de Três Marias (156) e Queimado (162).
 
 - DECOMP -> DECOMP
 
