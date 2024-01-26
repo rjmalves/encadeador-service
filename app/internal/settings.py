@@ -3,8 +3,8 @@ import os
 
 class Settings:
     clusterId = os.getenv("CLUSTER_ID", "0")
-    basedir = os.getenv("APP_BASEDIR")
-    installdir = os.getenv("APP_INSTALLDIR")
+    basedir = os.getenv("APP_BASEDIR", os.curdir)
+    installdir = os.getenv("APP_INSTALLDIR", "/usr/local/bin")
     host = os.getenv("HOST", "localhost")
     port = int(os.getenv("PORT", "80"))
     root_path = os.getenv("ROOT_PATH", "/")
@@ -14,8 +14,8 @@ class Settings:
     @classmethod
     def read_environments(cls):
         cls.clusterId = os.getenv("CLUSTER_ID", "0")
-        cls.basedir = os.getenv("APP_BASEDIR")
-        cls.installdir = os.getenv("APP_INSTALLDIR")
+        cls.basedir = os.getenv("APP_BASEDIR", os.curdir)
+        cls.installdir = os.getenv("APP_INSTALLDIR", "/usr/local/bin")
         cls.host = os.getenv("HOST", "localhost")
         cls.port = int(os.getenv("PORT", "80"))
         cls.root_path = os.getenv("ROOT_PATH", "/")

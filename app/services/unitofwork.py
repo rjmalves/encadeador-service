@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from os import chdir, curdir
-from typing import Dict, Union
+from typing import Dict, Union, Type
 from pathlib import Path
 
 from app.models.program import Program
@@ -51,7 +51,9 @@ class NewaveUnitOfWork(AbstractUnitOfWork):
     def __enter__(self) -> "NewaveUnitOfWork":
         chdir(self._case_directory)
         self.__create_repository()
-        return super().__enter__()
+        uow = super().__enter__()
+        assert isinstance(uow, NewaveUnitOfWork)
+        return uow
 
     def __exit__(self, *args):
         chdir(self._current_path)
@@ -63,6 +65,8 @@ class NewaveUnitOfWork(AbstractUnitOfWork):
 
     @property
     def files(self) -> AbstractNewaveRepository:
+        if not self._newave:
+            raise RuntimeError("Newave repository not created")
         return self._newave
 
     def rollback(self):
@@ -82,7 +86,9 @@ class DecompUnitOfWork(AbstractUnitOfWork):
     def __enter__(self) -> "DecompUnitOfWork":
         chdir(self._case_directory)
         self.__create_repository()
-        return super().__enter__()
+        uow = super().__enter__()
+        assert isinstance(uow, DecompUnitOfWork)
+        return uow
 
     def __exit__(self, *args):
         chdir(self._current_path)
@@ -94,6 +100,8 @@ class DecompUnitOfWork(AbstractUnitOfWork):
 
     @property
     def files(self) -> AbstractDecompRepository:
+        if not self._decomp:
+            raise RuntimeError("Decomp repository not created")
         return self._decomp
 
     def rollback(self):
@@ -101,7 +109,7 @@ class DecompUnitOfWork(AbstractUnitOfWork):
 
 
 def factory(kind: Program, *args, **kwargs) -> AbstractUnitOfWork:
-    mappings: Dict[Program, AbstractUnitOfWork] = {
+    mappings: Dict[Program, Type[AbstractUnitOfWork]] = {
         Program.NEWAVE: NewaveUnitOfWork,
         Program.DECOMP: DecompUnitOfWork,
     }

@@ -1,8 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
-from typing import List
 from app.internal.httpresponse import HTTPResponse
 from app.models.chainingrequest import ChainingRequest
-from app.models.chainingresult import ChainingResult
 from app.models.chainingresponse import ChainingResponse
 
 from app.adapters.uriparserrepository import AbstractURIParsingRepository
@@ -17,19 +15,9 @@ router = APIRouter(
 )
 
 
-responses = {
-    201: {"detail": ""},
-    202: {"detail": ""},
-    404: {"detail": ""},
-    500: {"detail": ""},
-    503: {"detail": ""},
-}
-
-
 @router.post(
     "/",
     response_model=ChainingResponse,
-    responses=responses,
 )
 async def chain(
     req: ChainingRequest,
