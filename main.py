@@ -2,8 +2,6 @@ from dotenv import load_dotenv
 import uvicorn
 import os
 import pathlib
-from fastapi import FastAPI
-from app.routers import chain
 from app.internal.settings import Settings
 from app.utils.log import Log
 from app.app import make_app
