@@ -3,14 +3,16 @@ from os import chdir, curdir
 from typing import Dict, Union, Type
 from pathlib import Path
 
+
 from app.models.program import Program
+from app.internal.settings import Settings
 from app.adapters.newaverepository import (
     AbstractNewaveRepository,
-    RawNewaveRepository,
+    factory as newave_factory,
 )
 from app.adapters.decomprepository import (
     AbstractDecompRepository,
-    RawDecompRepository,
+    factory as decomp_factory,
 )
 
 
@@ -46,7 +48,9 @@ class NewaveUnitOfWork(AbstractUnitOfWork):
 
     def __create_repository(self):
         if self._newave is None:
-            self._newave = RawNewaveRepository(str(self._case_directory))
+            self._newave = newave_factory(
+                Settings.newave_source, str(self._case_directory)
+            )
 
     def __enter__(self) -> "NewaveUnitOfWork":
         chdir(self._case_directory)
@@ -81,7 +85,9 @@ class DecompUnitOfWork(AbstractUnitOfWork):
 
     def __create_repository(self):
         if self._decomp is None:
-            self._decomp = RawDecompRepository(str(self._case_directory))
+            self._decomp = decomp_factory(
+                Settings.decomp_source, str(self._case_directory)
+            )
 
     def __enter__(self) -> "DecompUnitOfWork":
         chdir(self._case_directory)

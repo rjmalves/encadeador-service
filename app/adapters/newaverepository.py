@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import pathlib
 from os.path import join
+from os import curdir
 from typing import Dict, Optional, Union, Type
 from inewave.newave.caso import Caso
 from inewave.newave.arquivos import Arquivos
@@ -16,6 +17,11 @@ from app.internal.settings import Settings
 from app.utils.encoding import converte_codificacao
 from app.utils.log import Log
 from app.internal.httpresponse import HTTPResponse
+
+from tests.mocks.arquivos.newave.arquivos import MockArquivos
+from tests.mocks.arquivos.newave.dger import MockDger
+from tests.mocks.arquivos.newave.confhd import MockConfhd
+from io import StringIO
 
 
 class AbstractNewaveRepository(ABC):
@@ -330,8 +336,60 @@ class RawNewaveRepository(AbstractNewaveRepository):
         return self.__pmo
 
 
+class TestNewaveRepository(AbstractNewaveRepository):
+    def __init__(self, path: str) -> None:
+        super().__init__()
+
+    @property
+    def arquivos(self) -> Union[Arquivos, HTTPResponse]:
+        return Arquivos.read("".join(MockArquivos))
+
+    async def get_dger(self) -> Union[Dger, HTTPResponse]:
+        return Dger.read("".join(MockDger))
+
+    def set_dger(self, d: Dger) -> HTTPResponse:
+        raise NotImplementedError
+
+    def get_hidr(self) -> Union[Hidr, HTTPResponse]:
+        with open(
+            join(curdir, "tests", "mocks", "arquivos", "newave", "hidr.dat"),
+            "rb",
+        ) as f:
+            return Hidr.read(f.read())
+
+    def get_confhd(self) -> Union[Confhd, HTTPResponse]:
+        return Confhd.read("".join(MockConfhd))
+
+    def set_confhd(self, d: Confhd) -> HTTPResponse:
+        sio = StringIO()
+        d.write(sio)
+        return HTTPResponse(code=200, detail=sio.getvalue())
+
+    def get_eafpast(self) -> Union[Eafpast, HTTPResponse]:
+        raise NotImplementedError
+
+    def set_eafpast(self, d: Eafpast):
+        raise NotImplementedError
+
+    def get_adterm(self) -> Union[Adterm, HTTPResponse]:
+        raise NotImplementedError
+
+    def set_adterm(self, d: Adterm):
+        raise NotImplementedError
+
+    def get_term(self) -> Union[Term, HTTPResponse]:
+        raise NotImplementedError
+
+    def set_term(self, d: Term):
+        raise NotImplementedError
+
+    def get_pmo(self) -> Union[Pmo, HTTPResponse]:
+        raise NotImplementedError
+
+
 def factory(kind: str, *args, **kwargs) -> AbstractNewaveRepository:
     mappings: Dict[str, Type[AbstractNewaveRepository]] = {
         "FS": RawNewaveRepository,
+        "TEST": TestNewaveRepository,
     }
     return mappings.get(kind, RawNewaveRepository)(*args, **kwargs)

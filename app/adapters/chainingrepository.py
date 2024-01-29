@@ -106,11 +106,10 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
         def __encadeia_ilha_solteira_equiv(
             volumes: pd.DataFrame, usinas: pd.DataFrame
         ) -> pd.DataFrame:
-            vol = float(
-                volumes.loc[
-                    volumes["codigo_usina"] == 44, __coluna_para_encadear()
-                ]
-            )
+            vol = volumes.loc[
+                volumes["codigo_usina"] == 44, __coluna_para_encadear()
+            ].iloc[0]
+
             Log.log().info(f"Caso especial de I. Solteira Equiv: {vol} %")
             usinas.loc[usinas["codigo_usina"] == 34, "inicial"] = vol
             usinas.loc[usinas["codigo_usina"] == 43, "inicial"] = vol
@@ -194,11 +193,10 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
             # Confere se tem o reservatório
             if num_dc not in set(volumes["codigo_usina"]):
                 continue
-            vol = float(
-                volumes.loc[
-                    volumes["codigo_usina"] == num_dc, __coluna_para_encadear()
-                ]
-            )
+            vol = volumes.loc[
+                volumes["codigo_usina"] == num_dc, __coluna_para_encadear()
+            ].iloc[0]
+
             if num_dc == SERRA_MESA_FICT_DC:
                 vf = __correcao_serra_mesa_ficticia(vol)
                 num_nw = SERRA_MESA_FICT_NW
@@ -295,9 +293,10 @@ class DECOMPChainingRepository(AbstractChainingRepository):
         def __encadeia_ilha_solteira_equiv(
             volumes: pd.DataFrame, dadger: Dadger
         ):
-            vol = float(
-                volumes.loc[volumes["codigo_usina"] == 44, "estagio_1"]
-            )
+            vol = volumes.loc[volumes["codigo_usina"] == 44, "estagio_1"].iloc[
+                0
+            ]
+
             Log.log().info(f"Caso especial de I. Solteira Equiv: {vol} %")
             for codigo_uh in [34, 43]:
                 uh = dadger.uh(codigo_uh)
@@ -404,13 +403,12 @@ class DECOMPChainingRepository(AbstractChainingRepository):
         # Encadeia cada tempo de viagem
         for codigo in __codigos_usinas_tviagem():
             # Extrai o Qdef do relato
-            qdef = float(
-                relatorio.loc[
-                    (relatorio["estagio"] == 1)
-                    & (relatorio["codigo_usina"] == codigo),
-                    "vazao_defluente_m3s",
-                ]
-            )
+            qdef = relatorio.loc[
+                (relatorio["estagio"] == 1)
+                & (relatorio["codigo_usina"] == codigo),
+                "vazao_defluente_m3s",
+            ].iloc[0]
+
             # Atualiza os tempos de viagem no dadger
             vi_ant = dadger_ant.vi(codigo)
             vi_novo = dadger.vi(codigo)

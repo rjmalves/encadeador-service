@@ -1,0 +1,47 @@
+
+   RELATORIO  DA  OPERACAO  TERMICA E CONTRATOS
+
+   DEZEMBRO  / SEMANA 1 - ESTAGIO  1 /  CENARIO   1 - PROB ACUMUL: 1.000000 PROB SUBPROB: 1.000000
+
+              Sinalizacao de Despacho antecipado em k meses    
+   X---X-----------X-------X-------X--------X-------X--------X-------X--------X-------X----------X------------X
+    Sis    Usina     Lag(k)               pat_1            pat_2            pat_3        Custo    Inic semana
+                     meses  Semana   (MWmed)  Dur(h)  (MWmed)  Dur(h)  (MWmed)  Dur(h)  (1000 $)  (dd/mm/aaaa)
+   X---X-----------X-------X-------X--------X-------X--------X-------X--------X-------X----------X------------X
+    SE  SANTA CRUZ     2    Sem 10     0.00  31.48      0.00  32.36      0.00  57.90         0.0  27/01/2024
+    SE  SANTA CRUZ     2    Sem 11     0.00  31.48      0.00  32.36      0.00  57.90         0.0  03/02/2024
+    SE  SANTA CRUZ     2    Sem 12     0.00  31.48      0.00  32.36      0.00  57.90         0.0  10/02/2024
+    SE  SANTA CRUZ     2    Sem 13     0.00  31.48      0.00  32.36      0.00  57.90         0.0  17/02/2024
+    SE  SANTA CRUZ     2    Sem 14     0.00  31.48      0.00  32.36      0.00  57.90         0.0  24/02/2024
+    SE  SANTA CRUZ     2    Sem 15     0.00  31.48      0.00  32.36      0.00  57.90         0.0  02/03/2024
+    SE  SANTA CRUZ     2    MENSAL     0.00 188.91      0.00 194.17      0.00 347.43         0.0
+  
+* Geracao definida em revisoes anteriores
+              Sinalizacao de Despacho antecipado em k meses    
+   X---X-----------X-------X-------X--------X-------X--------X-------X--------X-------X----------X------------X
+    Sis    Usina     Lag(k)               pat_1            pat_2            pat_3        Custo    Inic semana
+                     meses  Semana   (MWmed)  Dur(h)  (MWmed)  Dur(h)  (MWmed)  Dur(h)  (1000 $)  (dd/mm/aaaa)
+   X---X-----------X-------X-------X--------X-------X--------X-------X--------X-------X----------X------------X
+    SE  LUIZORMELO     2    Sem 10     0.00  31.48      0.00  32.36      0.00  57.90         0.0  27/01/2024
+    SE  LUIZORMELO     2    Sem 11     0.00  31.48      0.00  32.36      0.00  57.90         0.0  03/02/2024
+    SE  LUIZORMELO     2    Sem 12     0.00  31.48      0.00  32.36      0.00  57.90         0.0  10/02/2024
+    SE  LUIZORMELO     2    Sem 13     0.00  31.48      0.00  32.36      0.00  57.90         0.0  17/02/2024
+    SE  LUIZORMELO     2    Sem 14     0.00  31.48      0.00  32.36      0.00  57.90         0.0  24/02/2024
+    SE  LUIZORMELO     2    Sem 15     0.00  31.48      0.00  32.36      0.00  57.90         0.0  02/03/2024
+    SE  LUIZORMELO     2    MENSAL     0.00 188.91      0.00 194.17      0.00 347.43         0.0
+  
+* Geracao definida em revisoes anteriores
+              Sinalizacao de Despacho antecipado em k meses    
+   X---X-----------X-------X-------X--------X-------X--------X-------X--------X-------X----------X------------X
+    Sis    Usina     Lag(k)               pat_1            pat_2            pat_3        Custo    Inic semana
+                     meses  Semana   (MWmed)  Dur(h)  (MWmed)  Dur(h)  (MWmed)  Dur(h)  (1000 $)  (dd/mm/aaaa)
+   X---X-----------X-------X-------X--------X-------X--------X-------X--------X-------X----------X------------X
+    NE  PSERGIPE I     2    Sem 10     0.00  31.48      0.00  32.36      0.00  57.90         0.0  27/01/2024
+    NE  PSERGIPE I     2    Sem 11     0.00  31.48      0.00  32.36      0.00  57.90         0.0  03/02/2024
+    NE  PSERGIPE I     2    Sem 12     0.00  31.48      0.00  32.36      0.00  57.90         0.0  10/02/2024
+    NE  PSERGIPE I     2    Sem 13     0.00  31.48      0.00  32.36      0.00  57.90         0.0  17/02/2024
+    NE  PSERGIPE I     2    Sem 14     0.00  31.48      0.00  32.36      0.00  57.90         0.0  24/02/2024
+    NE  PSERGIPE I     2    Sem 15     0.00  31.48      0.00  32.36      0.00  57.90         0.0  02/03/2024
+    NE  PSERGIPE I     2    MENSAL     0.00 188.91      0.00 194.17      0.00 347.43         0.0
+  
+* Geracao definida em revisoes anteriores

@@ -12,6 +12,7 @@ from idecomp.decomp.dadgnl import Dadgnl
 from idecomp.decomp.hidr import Hidr
 from idecomp.decomp.inviabunic import InviabUnic
 from idecomp.decomp.relato import Relato
+from idecomp.decomp.relgnl import Relgnl
 import pandas as pd
 from app.adapters.decomprepository import factory
 
@@ -62,3 +63,7 @@ async def test_arquivos_decomp(mocker):
     arq = repo.get_relato()
     assert isinstance(arq, Relato)
     assert isinstance(arq.volume_util_reservatorios, pd.DataFrame)
+
+    arq = repo.get_relgnl()
+    assert isinstance(arq, Relgnl)
+    assert isinstance(arq.relatorio_operacao_termica, pd.DataFrame)

@@ -70,17 +70,32 @@ async def test_arquivos_newave(mocker):
     assert isinstance(arq, Eafpast)
     assert isinstance(arq.tendencia, pd.DataFrame)
 
+    m: MagicMock = mock_open(read_data="".join(MockEafpast))
+    with patch("builtins.open", m):
+        arq = repo.get_eafpast()
+        repo.set_eafpast(arq)
+
     m: MagicMock = mock_open(read_data="".join(MockAdterm))
     with patch("builtins.open", m):
         arq = repo.get_adterm()
     assert isinstance(arq, Adterm)
     assert isinstance(arq.despachos, pd.DataFrame)
 
+    m: MagicMock = mock_open(read_data="".join(MockAdterm))
+    with patch("builtins.open", m):
+        arq = repo.get_adterm()
+        repo.set_adterm(arq)
+
     m: MagicMock = mock_open(read_data="".join(MockTerm))
     with patch("builtins.open", m):
         arq = repo.get_term()
     assert isinstance(arq, Term)
     assert isinstance(arq.usinas, pd.DataFrame)
+
+    m: MagicMock = mock_open(read_data="".join(MockTerm))
+    with patch("builtins.open", m):
+        arq = repo.get_term()
+        repo.set_term(arq)
 
     m: MagicMock = mock_open(read_data="".join(MockPMO))
     with patch("builtins.open", m):

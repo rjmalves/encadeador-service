@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Type, Optional, Union
 import pathlib
+from os import curdir
 from os.path import join
+from io import StringIO
 
 from idecomp.decomp.caso import Caso
 from idecomp.decomp.arquivos import Arquivos
@@ -16,6 +18,9 @@ from app.internal.settings import Settings
 from app.utils.encoding import converte_codificacao
 from app.utils.log import Log
 from app.internal.httpresponse import HTTPResponse
+
+from tests.mocks.arquivos.decomp.dadger import MockDadger
+from tests.mocks.arquivos.decomp.relato import MockRelato
 
 
 class AbstractDecompRepository(ABC):
@@ -266,8 +271,52 @@ class RawDecompRepository(AbstractDecompRepository):
         return self.__hidr
 
 
+class TestDecompRepository(AbstractDecompRepository):
+    def __init__(self, path: str) -> None:
+        super().__init__()
+
+    @property
+    def caso(self) -> Caso:
+        return Caso.read("rv0")
+
+    @property
+    def arquivos(self) -> Union[Arquivos, HTTPResponse]:
+        return Arquivos.read("")
+
+    async def get_dadger(self) -> Union[Dadger, HTTPResponse]:
+        return Dadger.read("".join(MockDadger))
+
+    def set_dadger(self, d: Dadger) -> HTTPResponse:
+        sio = StringIO()
+        d.write(sio)
+        return HTTPResponse(code=200, detail=sio.getvalue())
+
+    async def get_dadgnl(self) -> Union[Dadgnl, HTTPResponse]:
+        raise NotImplementedError
+
+    def set_dadgnl(self, d: Dadgnl) -> HTTPResponse:
+        raise NotImplementedError
+
+    def get_relato(self) -> Union[Relato, HTTPResponse]:
+        return Relato.read("".join(MockRelato))
+
+    def get_relgnl(self) -> Union[Relgnl, HTTPResponse]:
+        raise NotImplementedError
+
+    def get_inviabunic(self) -> Union[InviabUnic, HTTPResponse]:
+        raise NotImplementedError
+
+    def get_hidr(self) -> Union[Hidr, HTTPResponse]:
+        with open(
+            join(curdir, "tests", "mocks", "arquivos", "decomp", "hidr.dat"),
+            "rb",
+        ) as f:
+            return Hidr.read(f.read())
+
+
 def factory(kind: str, *args, **kwargs) -> AbstractDecompRepository:
     mapping: Dict[str, Type[AbstractDecompRepository]] = {
-        "FS": RawDecompRepository
+        "FS": RawDecompRepository,
+        "TEST": TestDecompRepository,
     }
     return mapping.get(kind, RawDecompRepository)(*args, **kwargs)
