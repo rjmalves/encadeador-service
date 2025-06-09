@@ -1,0 +1,15 @@
+python-dotenv
+fastapi[all]
+pyarrow
+requests
+aiohttp
+inewave
+idecomp
+pandas
+pybase62
+pytest
+pytest-cov
+pytest-mock
+pytest-aiohttp
+mypy
+pylama
