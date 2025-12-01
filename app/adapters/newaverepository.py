@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import pathlib
 from os.path import join
 from os import curdir
 from typing import Dict, Optional, Union, Type
@@ -13,8 +12,6 @@ from inewave.newave.adterm import Adterm
 from inewave.newave.term import Term
 from inewave.newave.pmo import Pmo
 
-from app.internal.settings import Settings
-from app.utils.encoding import converte_codificacao
 from app.utils.log import Log
 from app.internal.httpresponse import HTTPResponse
 
@@ -139,13 +136,6 @@ class RawNewaveRepository(AbstractNewaveRepository):
                 arq_dger = arq.dger
                 if not arq_dger:
                     raise FileNotFoundError()
-                caminho = str(pathlib.Path(self.__path).joinpath(arq_dger))
-                script = str(
-                    pathlib.Path(Settings.installdir).joinpath(
-                        Settings.encoding_script
-                    )
-                )
-                await converte_codificacao(caminho, script)
                 Log.log().info(f"Lendo arquivo {arq_dger}")
                 self.__dger = Dger.read(join(self.__path, arq_dger))
             except FileNotFoundError:

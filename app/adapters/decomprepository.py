@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Type, Optional, Union
-import pathlib
 from os import curdir
 from os.path import join
 from io import StringIO
@@ -14,8 +13,6 @@ from idecomp.decomp.relato import Relato
 from idecomp.decomp.relgnl import Relgnl
 from idecomp.decomp.hidr import Hidr
 
-from app.internal.settings import Settings
-from app.utils.encoding import converte_codificacao
 from app.utils.log import Log
 from app.internal.httpresponse import HTTPResponse
 
@@ -127,13 +124,6 @@ class RawDecompRepository(AbstractDecompRepository):
                 arq_dadger = arq.dadger
                 if not arq_dadger:
                     raise FileNotFoundError()
-                caminho = str(pathlib.Path(self.__path).joinpath(arq_dadger))
-                script = str(
-                    pathlib.Path(Settings.installdir).joinpath(
-                        Settings.encoding_script
-                    )
-                )
-                await converte_codificacao(caminho, script)
                 Log.log().info(f"Lendo arquivo {arq_dadger}")
                 self.__dadger = Dadger.read(join(self.__path, arq_dadger))
             except FileNotFoundError:
@@ -167,13 +157,6 @@ class RawDecompRepository(AbstractDecompRepository):
                 arq_dadgnl = arq.dadgnl
                 if not arq_dadgnl:
                     raise FileNotFoundError()
-                caminho = str(pathlib.Path(self.__path).joinpath(arq_dadgnl))
-                script = str(
-                    pathlib.Path(Settings.installdir).joinpath(
-                        Settings.encoding_script
-                    )
-                )
-                await converte_codificacao(caminho, script)
                 Log.log().info(f"Lendo arquivo {arq_dadgnl}")
                 self.__dadgnl = Dadgnl.read(join(self.__path, arq_dadgnl))
             except FileNotFoundError:
