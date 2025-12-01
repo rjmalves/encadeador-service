@@ -1,5 +1,5 @@
+
 from pydantic import BaseModel
-from typing import Optional
 
 
 class ChainingResult(BaseModel):
@@ -8,5 +8,5 @@ class ChainingResult(BaseModel):
     variable of two cases.
     """
 
-    id: Optional[str]
+    id: str | None
     value: float

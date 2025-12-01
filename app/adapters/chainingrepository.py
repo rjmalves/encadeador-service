@@ -1,17 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Union, Callable
+from collections.abc import Callable
+
 import pandas as pd  # type: ignore
 from idecomp.decomp.dadger import Dadger
-from idecomp.decomp.modelos.dadger import VI, UH
+from idecomp.decomp.modelos.dadger import UH, VI
 
-from app.models.program import Program
-from app.models.chainingresult import ChainingResult
 from app.internal.httpresponse import HTTPResponse
+from app.models.chainingresult import ChainingResult
 from app.models.chainingvariable import ChainingVariable
+from app.models.program import Program
 from app.services.unitofwork import (
     AbstractUnitOfWork,
-    NewaveUnitOfWork,
     DecompUnitOfWork,
+    NewaveUnitOfWork,
 )
 from app.utils.log import Log
 
@@ -22,10 +23,10 @@ class AbstractChainingRepository(ABC):
     async def chain(
         self,
         variable: ChainingVariable,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
-        RULES: Dict[ChainingVariable, Callable] = {
+    ) -> list[ChainingResult] | HTTPResponse:
+        RULES: dict[ChainingVariable, Callable] = {
             ChainingVariable.VARM: self.chain_varm,
             ChainingVariable.TVIAGEM: self.chain_tviagem,
             ChainingVariable.GNL: self.chain_gnl,
@@ -39,33 +40,33 @@ class AbstractChainingRepository(ABC):
     @abstractmethod
     async def chain_varm(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         pass
 
     @abstractmethod
     async def chain_tviagem(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         pass
 
     @abstractmethod
     async def chain_gnl(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         pass
 
     @abstractmethod
     async def chain_ena(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         pass
 
 
@@ -74,9 +75,9 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
 
     async def chain_varm(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         def __numero_uhe_decomp(numero_newave: int) -> int:
             mapa_ficticias_NW_DC = {
                 318: 122,
@@ -90,7 +91,7 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
                 303: 257,
                 306: 253,
             }
-            if numero_newave in mapa_ficticias_NW_DC.keys():
+            if numero_newave in mapa_ficticias_NW_DC:
                 return mapa_ficticias_NW_DC[numero_newave]
             else:
                 return numero_newave
@@ -185,7 +186,7 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
                 code=500, detail="erro na leitura das usinas do confhd"
             )
 
-        results: List[ChainingResult] = []
+        results: list[ChainingResult] = []
         # Atualiza cada armazenamento
         for _, linha in usinas.iterrows():
             num = linha["codigo_usina"]
@@ -228,23 +229,23 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
 
     async def chain_tviagem(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         return HTTPResponse(code=405, detail="TVIAGEM not allowed for NEWAVE")
 
     async def chain_gnl(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         return HTTPResponse(code=501, detail="GNL not implemented for NEWAVE")
 
     async def chain_ena(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         return HTTPResponse(code=501, detail="ENA not implemented for NEWAVE")
 
 
@@ -253,9 +254,9 @@ class DECOMPChainingRepository(AbstractChainingRepository):
 
     async def chain_varm(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
             return HTTPResponse(
@@ -327,7 +328,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                 code=500, detail="erro na leitura dos volumes do relato"
             )
 
-        results: List[ChainingResult] = []
+        results: list[ChainingResult] = []
         # Encadeia cada armazenamento
         for _, linha in volumes.iterrows():
             num = linha["codigo_usina"]
@@ -357,10 +358,10 @@ class DECOMPChainingRepository(AbstractChainingRepository):
 
     async def chain_tviagem(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
-        def __codigos_usinas_tviagem() -> List[int]:
+    ) -> list[ChainingResult] | HTTPResponse:
+        def __codigos_usinas_tviagem() -> list[int]:
             return [156, 162]
 
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
@@ -399,7 +400,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                 detail="erro na leitura do relatório das UHEs do relato",
             )
 
-        results: List[ChainingResult] = []
+        results: list[ChainingResult] = []
         # Encadeia cada tempo de viagem
         for codigo in __codigos_usinas_tviagem():
             # Extrai o Qdef do relato
@@ -430,9 +431,9 @@ class DECOMPChainingRepository(AbstractChainingRepository):
 
     async def chain_gnl(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
             return HTTPResponse(
@@ -477,7 +478,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
         registros_anteriores = dad_anterior.gl()
         assert isinstance(registros_anteriores, list)
 
-        results: List[ChainingResult] = []
+        results: list[ChainingResult] = []
         for c in codigos:
             # Para cada semana i (exceto a última), o registro GL do DadGNL do
             # caso atual deve ter o valor do respectivo registro GL do DadGNL
@@ -543,9 +544,9 @@ class DECOMPChainingRepository(AbstractChainingRepository):
 
     async def chain_ena(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         return HTTPResponse(code=405, detail="ENA not allowed for DECOMP")
 
 

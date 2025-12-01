@@ -1,38 +1,39 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Type, Optional, Union
+from io import StringIO
 from os import curdir
 from os.path import join
-from io import StringIO
+from typing import TYPE_CHECKING
 
-from idecomp.decomp.caso import Caso
 from idecomp.decomp.arquivos import Arquivos
+from idecomp.decomp.caso import Caso
 from idecomp.decomp.dadger import Dadger
 from idecomp.decomp.dadgnl import Dadgnl
+from idecomp.decomp.hidr import Hidr
 from idecomp.decomp.inviabunic import InviabUnic
 from idecomp.decomp.relato import Relato
 from idecomp.decomp.relgnl import Relgnl
-from idecomp.decomp.hidr import Hidr
 
-from app.utils.log import Log
 from app.internal.httpresponse import HTTPResponse
+from app.utils.log import Log
 
-from tests.mocks.arquivos.decomp.dadger import MockDadger
-from tests.mocks.arquivos.decomp.relato import MockRelato
+# Test mocks only imported when needed for TestDecompRepository
+if TYPE_CHECKING:
+    pass  # Avoid circular import issues
 
 
 class AbstractDecompRepository(ABC):
     @property
     @abstractmethod
-    def caso(self) -> Union[Caso, HTTPResponse]:
+    def caso(self) -> Caso | HTTPResponse:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def arquivos(self) -> Union[Arquivos, HTTPResponse]:
+    def arquivos(self) -> Arquivos | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_dadger(self) -> Union[Dadger, HTTPResponse]:
+    async def get_dadger(self) -> Dadger | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
@@ -40,7 +41,7 @@ class AbstractDecompRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_dadgnl(self) -> Union[Dadgnl, HTTPResponse]:
+    async def get_dadgnl(self) -> Dadgnl | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
@@ -48,19 +49,19 @@ class AbstractDecompRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_inviabunic(self) -> Union[InviabUnic, HTTPResponse]:
+    def get_inviabunic(self) -> InviabUnic | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def get_relato(self) -> Union[Relato, HTTPResponse]:
+    def get_relato(self) -> Relato | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def get_relgnl(self) -> Union[Relgnl, HTTPResponse]:
+    def get_relgnl(self) -> Relgnl | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def get_hidr(self) -> Union[Hidr, HTTPResponse]:
+    def get_hidr(self) -> Hidr | HTTPResponse:
         raise NotImplementedError
 
 
@@ -71,28 +72,28 @@ class RawDecompRepository(AbstractDecompRepository):
             self.__caso = Caso.read(join(str(self.__path), "caso.dat"))
         except FileNotFoundError:
             Log.log().error("Não foi encontrado o arquivo caso.dat")
-        self.__arquivos: Optional[Arquivos] = None
-        self.__dadger: Union[Dadger, HTTPResponse] = HTTPResponse(
+        self.__arquivos: Arquivos | None = None
+        self.__dadger: Dadger | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_dadger = False
-        self.__dadgnl: Union[Dadgnl, HTTPResponse] = HTTPResponse(
+        self.__dadgnl: Dadgnl | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_dadgnl = False
-        self.__relato: Union[Relato, HTTPResponse] = HTTPResponse(
+        self.__relato: Relato | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_relato = False
-        self.__relgnl: Union[Relgnl, HTTPResponse] = HTTPResponse(
+        self.__relgnl: Relgnl | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_relgnl = False
-        self.__inviabunic: Union[InviabUnic, HTTPResponse] = HTTPResponse(
+        self.__inviabunic: InviabUnic | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_inviabunic = False
-        self.__hidr: Union[Hidr, HTTPResponse] = HTTPResponse(
+        self.__hidr: Hidr | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_hidr = False
@@ -102,7 +103,7 @@ class RawDecompRepository(AbstractDecompRepository):
         return self.__caso
 
     @property
-    def arquivos(self) -> Union[Arquivos, HTTPResponse]:
+    def arquivos(self) -> Arquivos | HTTPResponse:
         if self.__arquivos is None:
             try:
                 self.__arquivos = Arquivos.read(
@@ -114,7 +115,7 @@ class RawDecompRepository(AbstractDecompRepository):
                 return HTTPResponse(code=404, detail=msg)
         return self.__arquivos
 
-    async def get_dadger(self) -> Union[Dadger, HTTPResponse]:
+    async def get_dadger(self) -> Dadger | HTTPResponse:
         if self.__read_dadger is False:
             self.__read_dadger = True
             try:
@@ -147,7 +148,7 @@ class RawDecompRepository(AbstractDecompRepository):
         except Exception as e:
             return HTTPResponse(code=500, detail=str(e))
 
-    async def get_dadgnl(self) -> Union[Dadgnl, HTTPResponse]:
+    async def get_dadgnl(self) -> Dadgnl | HTTPResponse:
         if self.__read_dadgnl is False:
             self.__read_dadgnl = True
             try:
@@ -180,7 +181,7 @@ class RawDecompRepository(AbstractDecompRepository):
         except Exception as e:
             return HTTPResponse(code=500, detail=str(e))
 
-    def get_relato(self) -> Union[Relato, HTTPResponse]:
+    def get_relato(self) -> Relato | HTTPResponse:
         if self.__read_relato is False:
             self.__read_relato = True
             try:
@@ -197,7 +198,7 @@ class RawDecompRepository(AbstractDecompRepository):
                 return HTTPResponse(code=500, detail=str(e))
         return self.__relato
 
-    def get_relgnl(self) -> Union[Relgnl, HTTPResponse]:
+    def get_relgnl(self) -> Relgnl | HTTPResponse:
         if self.__read_relgnl is False:
             self.__read_relgnl = True
             try:
@@ -214,7 +215,7 @@ class RawDecompRepository(AbstractDecompRepository):
                 return HTTPResponse(code=500, detail=str(e))
         return self.__relgnl
 
-    def get_inviabunic(self) -> Union[InviabUnic, HTTPResponse]:
+    def get_inviabunic(self) -> InviabUnic | HTTPResponse:
         if self.__read_inviabunic is False:
             self.__read_inviabunic = True
             try:
@@ -233,7 +234,7 @@ class RawDecompRepository(AbstractDecompRepository):
                 return HTTPResponse(code=500, detail=str(e))
         return self.__inviabunic
 
-    def get_hidr(self) -> Union[Hidr, HTTPResponse]:
+    def get_hidr(self) -> Hidr | HTTPResponse:
         if self.__read_hidr is False:
             self.__read_hidr = True
             try:
@@ -255,41 +256,49 @@ class RawDecompRepository(AbstractDecompRepository):
 
 
 class TestDecompRepository(AbstractDecompRepository):
+    """Test repository for DECOMP - only used in testing environment."""
+
     def __init__(self, path: str) -> None:
         super().__init__()
+        # Import mocks only when needed (not available in production)
+        from tests.mocks.arquivos.decomp.dadger import MockDadger
+        from tests.mocks.arquivos.decomp.relato import MockRelato
+
+        self._mock_dadger = MockDadger
+        self._mock_relato = MockRelato
 
     @property
     def caso(self) -> Caso:
         return Caso.read("rv0")
 
     @property
-    def arquivos(self) -> Union[Arquivos, HTTPResponse]:
+    def arquivos(self) -> Arquivos | HTTPResponse:
         return Arquivos.read("")
 
-    async def get_dadger(self) -> Union[Dadger, HTTPResponse]:
-        return Dadger.read("".join(MockDadger))
+    async def get_dadger(self) -> Dadger | HTTPResponse:
+        return Dadger.read("".join(self._mock_dadger))
 
     def set_dadger(self, d: Dadger) -> HTTPResponse:
         sio = StringIO()
         d.write(sio)
         return HTTPResponse(code=200, detail=sio.getvalue())
 
-    async def get_dadgnl(self) -> Union[Dadgnl, HTTPResponse]:
+    async def get_dadgnl(self) -> Dadgnl | HTTPResponse:
         raise NotImplementedError
 
     def set_dadgnl(self, d: Dadgnl) -> HTTPResponse:
         raise NotImplementedError
 
-    def get_relato(self) -> Union[Relato, HTTPResponse]:
-        return Relato.read("".join(MockRelato))
+    def get_relato(self) -> Relato | HTTPResponse:
+        return Relato.read("".join(self._mock_relato))
 
-    def get_relgnl(self) -> Union[Relgnl, HTTPResponse]:
+    def get_relgnl(self) -> Relgnl | HTTPResponse:
         raise NotImplementedError
 
-    def get_inviabunic(self) -> Union[InviabUnic, HTTPResponse]:
+    def get_inviabunic(self) -> InviabUnic | HTTPResponse:
         raise NotImplementedError
 
-    def get_hidr(self) -> Union[Hidr, HTTPResponse]:
+    def get_hidr(self) -> Hidr | HTTPResponse:
         with open(
             join(curdir, "tests", "mocks", "arquivos", "decomp", "hidr.dat"),
             "rb",
@@ -298,7 +307,7 @@ class TestDecompRepository(AbstractDecompRepository):
 
 
 def factory(kind: str, *args, **kwargs) -> AbstractDecompRepository:
-    mapping: Dict[str, Type[AbstractDecompRepository]] = {
+    mapping: dict[str, type[AbstractDecompRepository]] = {
         "FS": RawDecompRepository,
         "TEST": TestDecompRepository,
     }

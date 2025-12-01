@@ -1,34 +1,35 @@
 from abc import ABC, abstractmethod
-from os.path import join
-from os import curdir
-from typing import Dict, Optional, Union, Type
-from inewave.newave.caso import Caso
-from inewave.newave.arquivos import Arquivos
-from inewave.newave.dger import Dger
-from inewave.newave.hidr import Hidr
-from inewave.newave.confhd import Confhd
-from inewave.newave.eafpast import Eafpast
-from inewave.newave.adterm import Adterm
-from inewave.newave.term import Term
-from inewave.newave.pmo import Pmo
-
-from app.utils.log import Log
-from app.internal.httpresponse import HTTPResponse
-
-from tests.mocks.arquivos.newave.arquivos import MockArquivos
-from tests.mocks.arquivos.newave.dger import MockDger
-from tests.mocks.arquivos.newave.confhd import MockConfhd
 from io import StringIO
+from os import curdir
+from os.path import join
+from typing import TYPE_CHECKING
+
+from inewave.newave.adterm import Adterm
+from inewave.newave.arquivos import Arquivos
+from inewave.newave.caso import Caso
+from inewave.newave.confhd import Confhd
+from inewave.newave.dger import Dger
+from inewave.newave.eafpast import Eafpast
+from inewave.newave.hidr import Hidr
+from inewave.newave.pmo import Pmo
+from inewave.newave.term import Term
+
+from app.internal.httpresponse import HTTPResponse
+from app.utils.log import Log
+
+# Test mocks only imported when needed for TestNewaveRepository
+if TYPE_CHECKING:
+    pass  # Avoid circular import issues
 
 
 class AbstractNewaveRepository(ABC):
     @property
     @abstractmethod
-    def arquivos(self) -> Union[Arquivos, HTTPResponse]:
+    def arquivos(self) -> Arquivos | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_dger(self) -> Union[Dger, HTTPResponse]:
+    async def get_dger(self) -> Dger | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
@@ -36,11 +37,11 @@ class AbstractNewaveRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_hidr(self) -> Union[Hidr, HTTPResponse]:
+    def get_hidr(self) -> Hidr | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def get_confhd(self) -> Union[Confhd, HTTPResponse]:
+    def get_confhd(self) -> Confhd | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
@@ -48,7 +49,7 @@ class AbstractNewaveRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_eafpast(self) -> Union[Eafpast, HTTPResponse]:
+    def get_eafpast(self) -> Eafpast | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
@@ -56,7 +57,7 @@ class AbstractNewaveRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_adterm(self) -> Union[Adterm, HTTPResponse]:
+    def get_adterm(self) -> Adterm | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
@@ -64,7 +65,7 @@ class AbstractNewaveRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_term(self) -> Union[Term, HTTPResponse]:
+    def get_term(self) -> Term | HTTPResponse:
         raise NotImplementedError
 
     @abstractmethod
@@ -72,7 +73,7 @@ class AbstractNewaveRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_pmo(self) -> Union[Pmo, HTTPResponse]:
+    def get_pmo(self) -> Pmo | HTTPResponse:
         raise NotImplementedError
 
 
@@ -83,38 +84,38 @@ class RawNewaveRepository(AbstractNewaveRepository):
             self.__caso = Caso.read(join(self.__path, "caso.dat"))
         except FileNotFoundError:
             Log.log().error("Não foi encontrado o arquivo caso.dat")
-        self.__arquivos: Optional[Arquivos] = None
-        self.__dger: Union[Dger, HTTPResponse] = HTTPResponse(
+        self.__arquivos: Arquivos | None = None
+        self.__dger: Dger | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_dger = False
-        self.__hidr: Union[Hidr, HTTPResponse] = HTTPResponse(
+        self.__hidr: Hidr | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_hidr = False
-        self.__confhd: Union[Confhd, HTTPResponse] = HTTPResponse(
+        self.__confhd: Confhd | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_confhd = False
-        self.__eafpast: Union[Eafpast, HTTPResponse] = HTTPResponse(
+        self.__eafpast: Eafpast | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_eafpast = False
-        self.__adterm: Union[Adterm, HTTPResponse] = HTTPResponse(
+        self.__adterm: Adterm | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_adterm = False
-        self.__term: Union[Term, HTTPResponse] = HTTPResponse(
+        self.__term: Term | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_term = False
-        self.__pmo: Union[Pmo, HTTPResponse] = HTTPResponse(
+        self.__pmo: Pmo | HTTPResponse = HTTPResponse(
             code=404, detail=""
         )
         self.__read_pmo = False
 
     @property
-    def arquivos(self) -> Union[Arquivos, HTTPResponse]:
+    def arquivos(self) -> Arquivos | HTTPResponse:
         if self.__arquivos is None:
             try:
                 self.__arquivos = Arquivos.read(
@@ -126,7 +127,7 @@ class RawNewaveRepository(AbstractNewaveRepository):
                 return HTTPResponse(code=404, detail=msg)
         return self.__arquivos
 
-    async def get_dger(self) -> Union[Dger, HTTPResponse]:
+    async def get_dger(self) -> Dger | HTTPResponse:
         if self.__read_dger is False:
             self.__read_dger = True
             try:
@@ -159,7 +160,7 @@ class RawNewaveRepository(AbstractNewaveRepository):
         except Exception as e:
             return HTTPResponse(code=500, detail=str(e))
 
-    def get_hidr(self) -> Union[Hidr, HTTPResponse]:
+    def get_hidr(self) -> Hidr | HTTPResponse:
         if self.__read_hidr is False:
             self.__read_hidr = True
             try:
@@ -173,7 +174,7 @@ class RawNewaveRepository(AbstractNewaveRepository):
                 self.__hidr = HTTPResponse(code=500, detail=str(e))
         return self.__hidr
 
-    def get_confhd(self) -> Union[Confhd, HTTPResponse]:
+    def get_confhd(self) -> Confhd | HTTPResponse:
         if self.__read_confhd is False:
             self.__read_confhd = True
             try:
@@ -206,7 +207,7 @@ class RawNewaveRepository(AbstractNewaveRepository):
         except Exception as e:
             return HTTPResponse(code=500, detail=str(e))
 
-    def get_eafpast(self) -> Union[Eafpast, HTTPResponse]:
+    def get_eafpast(self) -> Eafpast | HTTPResponse:
         if self.__read_eafpast is False:
             self.__read_eafpast = True
             try:
@@ -239,7 +240,7 @@ class RawNewaveRepository(AbstractNewaveRepository):
         except Exception as e:
             return HTTPResponse(code=500, detail=str(e))
 
-    def get_adterm(self) -> Union[Adterm, HTTPResponse]:
+    def get_adterm(self) -> Adterm | HTTPResponse:
         if self.__read_adterm is False:
             self.__read_adterm = True
             try:
@@ -272,7 +273,7 @@ class RawNewaveRepository(AbstractNewaveRepository):
         except Exception as e:
             return HTTPResponse(code=500, detail=str(e))
 
-    def get_term(self) -> Union[Term, HTTPResponse]:
+    def get_term(self) -> Term | HTTPResponse:
         if self.__read_term is False:
             self.__read_term = True
             try:
@@ -305,7 +306,7 @@ class RawNewaveRepository(AbstractNewaveRepository):
         except Exception as e:
             return HTTPResponse(code=500, detail=str(e))
 
-    def get_pmo(self) -> Union[Pmo, HTTPResponse]:
+    def get_pmo(self) -> Pmo | HTTPResponse:
         if self.__read_pmo is False:
             self.__read_pmo = True
             try:
@@ -327,58 +328,68 @@ class RawNewaveRepository(AbstractNewaveRepository):
 
 
 class TestNewaveRepository(AbstractNewaveRepository):
+    """Test repository for NEWAVE - only used in testing environment."""
+
     def __init__(self, path: str) -> None:
         super().__init__()
+        # Import mocks only when needed (not available in production)
+        from tests.mocks.arquivos.newave.arquivos import MockArquivos
+        from tests.mocks.arquivos.newave.confhd import MockConfhd
+        from tests.mocks.arquivos.newave.dger import MockDger
+
+        self._mock_arquivos = MockArquivos
+        self._mock_confhd = MockConfhd
+        self._mock_dger = MockDger
 
     @property
-    def arquivos(self) -> Union[Arquivos, HTTPResponse]:
-        return Arquivos.read("".join(MockArquivos))
+    def arquivos(self) -> Arquivos | HTTPResponse:
+        return Arquivos.read("".join(self._mock_arquivos))
 
-    async def get_dger(self) -> Union[Dger, HTTPResponse]:
-        return Dger.read("".join(MockDger))
+    async def get_dger(self) -> Dger | HTTPResponse:
+        return Dger.read("".join(self._mock_dger))
 
     def set_dger(self, d: Dger) -> HTTPResponse:
         raise NotImplementedError
 
-    def get_hidr(self) -> Union[Hidr, HTTPResponse]:
+    def get_hidr(self) -> Hidr | HTTPResponse:
         with open(
             join(curdir, "tests", "mocks", "arquivos", "newave", "hidr.dat"),
             "rb",
         ) as f:
             return Hidr.read(f.read())
 
-    def get_confhd(self) -> Union[Confhd, HTTPResponse]:
-        return Confhd.read("".join(MockConfhd))
+    def get_confhd(self) -> Confhd | HTTPResponse:
+        return Confhd.read("".join(self._mock_confhd))
 
     def set_confhd(self, d: Confhd) -> HTTPResponse:
         sio = StringIO()
         d.write(sio)
         return HTTPResponse(code=200, detail=sio.getvalue())
 
-    def get_eafpast(self) -> Union[Eafpast, HTTPResponse]:
+    def get_eafpast(self) -> Eafpast | HTTPResponse:
         raise NotImplementedError
 
     def set_eafpast(self, d: Eafpast):
         raise NotImplementedError
 
-    def get_adterm(self) -> Union[Adterm, HTTPResponse]:
+    def get_adterm(self) -> Adterm | HTTPResponse:
         raise NotImplementedError
 
     def set_adterm(self, d: Adterm):
         raise NotImplementedError
 
-    def get_term(self) -> Union[Term, HTTPResponse]:
+    def get_term(self) -> Term | HTTPResponse:
         raise NotImplementedError
 
     def set_term(self, d: Term):
         raise NotImplementedError
 
-    def get_pmo(self) -> Union[Pmo, HTTPResponse]:
+    def get_pmo(self) -> Pmo | HTTPResponse:
         raise NotImplementedError
 
 
 def factory(kind: str, *args, **kwargs) -> AbstractNewaveRepository:
-    mappings: Dict[str, Type[AbstractNewaveRepository]] = {
+    mappings: dict[str, type[AbstractNewaveRepository]] = {
         "FS": RawNewaveRepository,
         "TEST": TestNewaveRepository,
     }

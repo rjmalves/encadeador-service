@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Union, Type
 
 import base62  # type: ignore
 
@@ -11,13 +10,13 @@ class AbstractURIParsingRepository(ABC):
 
     @classmethod
     @abstractmethod
-    def parse(cls, uri: str) -> Union[str, HTTPResponse]:
+    def parse(cls, uri: str) -> str | HTTPResponse:
         pass
 
 
 class Base62URIParsingRepository(AbstractURIParsingRepository):
     @classmethod
-    def parse(cls, uri: str) -> Union[str, HTTPResponse]:
+    def parse(cls, uri: str) -> str | HTTPResponse:
         try:
             path = base62.decodebytes(uri).decode("utf-8")
             return path
@@ -25,11 +24,11 @@ class Base62URIParsingRepository(AbstractURIParsingRepository):
             return HTTPResponse(code=400, detail="given URI is not in base62")
 
 
-SUPPORTED_FORMATS: Dict[str, Type[AbstractURIParsingRepository]] = {
+SUPPORTED_FORMATS: dict[str, type[AbstractURIParsingRepository]] = {
     "BASE62": Base62URIParsingRepository
 }
 DEFAULT = Base62URIParsingRepository
 
 
-def factory(kind: str) -> Type[AbstractURIParsingRepository]:
+def factory(kind: str) -> type[AbstractURIParsingRepository]:
     return SUPPORTED_FORMATS.get(kind, DEFAULT)

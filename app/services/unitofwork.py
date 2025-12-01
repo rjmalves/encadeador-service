@@ -1,30 +1,47 @@
 from abc import ABC, abstractmethod
 from os import chdir, curdir
-from typing import Dict, Union, Type
 from pathlib import Path
+from typing import Any
 
-
-from app.models.program import Program
-from app.internal.settings import Settings
-from app.adapters.newaverepository import (
-    AbstractNewaveRepository,
-    factory as newave_factory,
-)
 from app.adapters.decomprepository import (
     AbstractDecompRepository,
+)
+from app.adapters.decomprepository import (
     factory as decomp_factory,
 )
+from app.adapters.newaverepository import (
+    AbstractNewaveRepository,
+)
+from app.adapters.newaverepository import (
+    factory as newave_factory,
+)
+from app.internal.settings import Settings
+from app.models.program import Program
 
 
 class AbstractUnitOfWork(ABC):
+    """
+    Abstract Unit of Work for managing case file operations.
+
+    Supports both sync and async context managers for flexibility.
+    """
+
     def __enter__(self) -> "AbstractUnitOfWork":
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         self.rollback()
 
+    async def __aenter__(self) -> "AbstractUnitOfWork":
+        """Async context manager entry (for S3 unit of work)."""
+        return self.__enter__()
+
+    async def __aexit__(self, *args: Any) -> None:
+        """Async context manager exit (for S3 unit of work)."""
+        self.__exit__(*args)
+
     @abstractmethod
-    def rollback(self):
+    def rollback(self) -> None:
         raise NotImplementedError
 
     @property
@@ -36,8 +53,18 @@ class AbstractUnitOfWork(ABC):
     @abstractmethod
     def files(
         self,
-    ) -> Union[AbstractNewaveRepository, AbstractDecompRepository]:
+    ) -> AbstractNewaveRepository | AbstractDecompRepository:
         raise NotImplementedError
+
+    @property
+    def output_key(self) -> str | None:
+        """S3 key of uploaded output (only for S3 unit of work)."""
+        return None
+
+    @property
+    def execution_hash(self) -> str | None:
+        """Execution hash for this unit of work (only for S3 unit of work)."""
+        return None
 
 
 class NewaveUnitOfWork(AbstractUnitOfWork):
@@ -115,7 +142,7 @@ class DecompUnitOfWork(AbstractUnitOfWork):
 
 
 def factory(kind: Program, *args, **kwargs) -> AbstractUnitOfWork:
-    mappings: Dict[Program, Type[AbstractUnitOfWork]] = {
+    mappings: dict[Program, type[AbstractUnitOfWork]] = {
         Program.NEWAVE: NewaveUnitOfWork,
         Program.DECOMP: DecompUnitOfWork,
     }

@@ -8,9 +8,9 @@
 
 | ID | Title | Points | Status |
 |----|-------|--------|--------|
-| API-004 | Update chain router for S3 | 5 | ⬜ |
-| API-005 | Add exception handlers | 2 | ⬜ |
-| API-006 | Write API integration tests | 3 | ⬜ |
+| API-004 | Update chain router for S3 | 5 | ✅ |
+| API-005 | Add exception handlers | 2 | ✅ |
+| API-006 | Write API integration tests | 3 | ✅ |
 
 **Total Points**: 10
 
@@ -22,7 +22,7 @@
 
 ## Definition of Done
 
-- [ ] Chain router works with S3
-- [ ] Error responses properly formatted
-- [ ] Integration tests passing
-- [ ] API documentation updated
+- [x] Chain router works with S3
+- [x] Error responses properly formatted
+- [x] Integration tests passing
+- [x] API documentation updated

@@ -1,0 +1,69 @@
+services:
+  encadeador:
+    image: encadeador-service:${APP_VERSION:-2.0.0}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: encadeador-service
+    restart: unless-stopped
+
+    environment:
+      # Application settings
+      - PORT=8000
+      - HOST=0.0.0.0
+      - ROOT_PATH=/encadeador
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - APP_VERSION=${APP_VERSION:-2.0.0}
+
+      # S3 Configuration
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - DEFAULT_DECOMP_BUCKET=${DEFAULT_DECOMP_BUCKET:-decomp-bucket}
+      - DEFAULT_NEWAVE_BUCKET=${DEFAULT_NEWAVE_BUCKET:-newave-bucket}
+      - DECOMP_SOURCE=S3
+      - NEWAVE_SOURCE=S3
+
+      # Processing
+      - TEMP_DIR=/tmp/encadeador
+      - MAX_TEMP_DIR_AGE_HOURS=24
+
+    volumes:
+      # Temp directory for processing (optional persistence)
+      - encadeador-temp:/tmp/encadeador
+
+    expose:
+      - "8000"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    labels:
+      # Traefik labels for reverse proxy
+      - "traefik.enable=true"
+      - "traefik.http.routers.encadeador.rule=PathPrefix(`/encadeador`)"
+      - "traefik.http.routers.encadeador.entrypoints=web"
+      - "traefik.http.services.encadeador.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.encadeador-strip.stripprefix.prefixes=/encadeador"
+      - "traefik.http.routers.encadeador.middlewares=encadeador-strip"
+
+    networks:
+      - hpc-network
+
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+volumes:
+  encadeador-temp:
+
+networks:
+  hpc-network:
+    external: true

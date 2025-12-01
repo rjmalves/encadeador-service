@@ -24,6 +24,10 @@ class Settings:
     zip_compression_level = int(os.getenv("ZIP_COMPRESSION_LEVEL", "6"))
     max_temp_dir_age_hours = int(os.getenv("MAX_TEMP_DIR_AGE_HOURS", "24"))
 
+    # S3 Path Patterns
+    s3_artifacts_prefix = os.getenv("S3_ARTIFACTS_PREFIX", "artifacts")
+    s3_ingest_prefix = os.getenv("S3_INGEST_PREFIX", "ingest")
+
     @classmethod
     def read_environments(cls):
         # Application settings
@@ -47,3 +51,7 @@ class Settings:
         cls.temp_dir = os.getenv("TEMP_DIR", "/tmp/encadeador")
         cls.zip_compression_level = int(os.getenv("ZIP_COMPRESSION_LEVEL", "6"))
         cls.max_temp_dir_age_hours = int(os.getenv("MAX_TEMP_DIR_AGE_HOURS", "24"))
+
+        # S3 Path Patterns
+        cls.s3_artifacts_prefix = os.getenv("S3_ARTIFACTS_PREFIX", "artifacts")
+        cls.s3_ingest_prefix = os.getenv("S3_INGEST_PREFIX", "ingest")

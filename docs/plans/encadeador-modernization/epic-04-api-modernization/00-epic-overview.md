@@ -2,7 +2,7 @@
 
 > **Epic Owner**: TBD  
 > **Duration**: 1 week  
-> **Status**: ⬜ Not Started
+> **Status**: ✅ Complete
 
 ## Summary
 
@@ -40,7 +40,7 @@ Update the API contract to use S3 buckets and execution hashes instead of base62
 
 ## Sprint Breakdown
 
-### Sprint 01: Models & Health (2-3 days)
+### Sprint 01: Models & Health (2-3 days) ✅
 
 | Ticket ID | Title | Points |
 |-----------|-------|--------|
@@ -48,7 +48,7 @@ Update the API contract to use S3 buckets and execution hashes instead of base62
 | API-002 | Create structured error models | 2 |
 | API-003 | Create health endpoints | 2 |
 
-### Sprint 02: Router & Tests (2-3 days)
+### Sprint 02: Router & Tests (2-3 days) ✅
 
 | Ticket ID | Title | Points |
 |-----------|-------|--------|
@@ -58,13 +58,13 @@ Update the API contract to use S3 buckets and execution hashes instead of base62
 
 ## Acceptance Criteria
 
-- [ ] New request model accepts `bucket` + `execution_hash`
-- [ ] New response model includes `output_key`
-- [ ] Health endpoints at `/health`, `/health/live`, `/health/ready`
-- [ ] Structured error responses with error codes
-- [ ] OpenAPI docs reflect new contract
-- [ ] Integration tests with mocked S3
-- [ ] Old base62 parsing deprecated/removed
+- [x] New request model accepts `bucket` + `execution_hash`
+- [x] New response model includes `output_key`
+- [x] Health endpoints at `/health`, `/health/live`, `/health/ready`
+- [x] Structured error responses with error codes
+- [x] OpenAPI docs reflect new contract
+- [x] Integration tests with mocked S3
+- [x] Old base62 parsing deprecated/removed
 
 ## Estimated Effort
 
