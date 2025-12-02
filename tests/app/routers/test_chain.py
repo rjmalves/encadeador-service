@@ -1,15 +1,18 @@
 from fastapi.testclient import TestClient
-from app.routers import chain
-from app.models.program import Program
-from app.models.chainingcase import ChainingCase
-from app.models.chainingvariable import ChainingVariable
-from app.models.chainingrequest import ChainingRequest
-from inewave.newave import Confhd
 from idecomp.decomp import Relato
-from tests.mocks.arquivos.newave.confhd import MockConfhd
-from tests.mocks.arquivos.decomp.relato import MockRelato
+from inewave.newave import Confhd
 
-client = TestClient(chain.router)
+from app.app import make_app
+from app.models.chainingcase import ChainingCase
+from app.models.chainingrequest import ChainingRequest
+from app.models.chainingvariable import ChainingVariable
+from app.models.program import Program
+from tests.mocks.arquivos.decomp.relato import MockRelato
+from tests.mocks.arquivos.newave.confhd import MockConfhd
+
+# Create test client using the full app
+app = make_app()
+client = TestClient(app)
 
 
 def test_chain_decomp_newave_varm():
@@ -18,9 +21,7 @@ def test_chain_decomp_newave_varm():
     source = ChainingCase(id=path, program=Program.DECOMP)
     destination = ChainingCase(id=path, program=Program.NEWAVE)
     variable = ChainingVariable.VARM
-    req = ChainingRequest(
-        sources=[source], destination=destination, variable=variable
-    )
+    req = ChainingRequest(sources=[source], destination=destination, variable=variable)
     response = client.post("/chain/", content=req.model_dump_json())
     assert response.status_code == 200
     res_json = response.json()
@@ -33,9 +34,7 @@ def test_chain_decomp_newave_varm():
     for chain_res in res_json["result"]:
         if chain_res["id"] in df_vol["nome_usina"]:
             assert (
-                df_vol.loc[
-                    df_vol["nome_usina"] == chain_res["id"], "estagio_1"
-                ].iloc[0]
+                df_vol.loc[df_vol["nome_usina"] == chain_res["id"], "estagio_1"].iloc[0]
                 == chain_res["value"]
             )
 
@@ -48,9 +47,7 @@ def test_chain_decomp_decomp_varm():
     source = ChainingCase(id=path, program=Program.DECOMP)
     destination = ChainingCase(id=path, program=Program.DECOMP)
     variable = ChainingVariable.VARM
-    req = ChainingRequest(
-        sources=[source], destination=destination, variable=variable
-    )
+    req = ChainingRequest(sources=[source], destination=destination, variable=variable)
     response = client.post("/chain/", content=req.model_dump_json())
     assert response.status_code == 200
     res_json = response.json()
@@ -61,9 +58,7 @@ def test_chain_decomp_decomp_varm():
     for chain_res in res_json["result"]:
         if chain_res["id"] in df_vol["nome_usina"]:
             assert (
-                df_vol.loc[
-                    df_vol["nome_usina"] == chain_res["id"], "estagio_1"
-                ].iloc[0]
+                df_vol.loc[df_vol["nome_usina"] == chain_res["id"], "estagio_1"].iloc[0]
                 == chain_res["value"]
             )
 
@@ -74,9 +69,7 @@ def test_chain_decomp_decomp_tviagem():
     source = ChainingCase(id=path, program=Program.DECOMP)
     destination = ChainingCase(id=path, program=Program.DECOMP)
     variable = ChainingVariable.TVIAGEM
-    req = ChainingRequest(
-        sources=[source], destination=destination, variable=variable
-    )
+    req = ChainingRequest(sources=[source], destination=destination, variable=variable)
     response = client.post("/chain/", content=req.model_dump_json())
     assert response.status_code == 200
     res_json = response.json()

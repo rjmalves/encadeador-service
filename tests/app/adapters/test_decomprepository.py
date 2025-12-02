@@ -1,11 +1,7 @@
-from tests.mocks.mock_open import mock_open
-import pytest
 from unittest.mock import MagicMock, patch
-from tests.mocks.arquivos.decomp.dadger import MockDadger
-from tests.mocks.arquivos.decomp.dadgnl import MockDadgnl
-from tests.mocks.arquivos.decomp.arquivos import (
-    MockArquivos,
-)
+
+import pandas as pd
+import pytest
 from idecomp.decomp.arquivos import Arquivos
 from idecomp.decomp.dadger import Dadger
 from idecomp.decomp.dadgnl import Dadgnl
@@ -13,15 +9,20 @@ from idecomp.decomp.hidr import Hidr
 from idecomp.decomp.inviabunic import InviabUnic
 from idecomp.decomp.relato import Relato
 from idecomp.decomp.relgnl import Relgnl
-import pandas as pd
-from app.adapters.decomprepository import factory
 
+from app.adapters.decomprepository import factory
+from tests.mocks.arquivos.decomp.arquivos import (
+    MockArquivos,
+)
+from tests.mocks.arquivos.decomp.dadger import MockDadger
+from tests.mocks.arquivos.decomp.dadgnl import MockDadgnl
+from tests.mocks.mock_open import mock_open
 
 DIR_TESTE = "./tests/mocks/arquivos/decomp/"
 
 
 @pytest.mark.asyncio
-async def test_arquivos_decomp(mocker):
+async def test_arquivos_decomp():
     m: MagicMock = mock_open(read_data="rv0")
     with patch("builtins.open", m):
         repo = factory("FS", DIR_TESTE)

@@ -1,0 +1,133 @@
+[project]
+name = "encadeador-service"
+version = "2.0.0"
+description = "Chaining service for DECOMP/NEWAVE model variables"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [
+    { name = "Rogerio Alves" }
+]
+keywords = ["decomp", "newave", "chaining", "hpc", "energy"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: FastAPI",
+    "Topic :: Scientific/Engineering",
+]
+
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "fastapi[standard]>=0.115.0",
+    "pyarrow>=14.0.0",
+    "requests>=2.31.0",
+    "aiohttp>=3.9.0",
+    "inewave>=0.0.80",
+    "idecomp>=0.0.64",
+    "pandas>=2.0.0",
+    "boto3>=1.34.0",
+    "botocore>=1.34.0",
+    "pybase62>=1.0.0",  # Legacy: to be removed in Epic 02
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.8.0",
+    "ruff>=0.4.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "moto[s3]>=5.0.0",
+    "httpx>=0.27.0",
+    "boto3-stubs[essential]>=1.34.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/rjmalves/encadeador-service"
+Documentation = "https://github.com/rjmalves/encadeador-service#readme"
+Repository = "https://github.com/rjmalves/encadeador-service"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+# =============================================================================
+# Tool Configuration
+# =============================================================================
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+    "B904",   # raise without from inside except
+    "ARG001", # unused function argument
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG001", "ARG002"]
+"app/adapters/chainingrepository.py" = ["ARG002"]  # Interface methods
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = false
+warn_unused_ignores = false
+disallow_untyped_defs = false
+ignore_missing_imports = true
+check_untyped_defs = true
+no_implicit_optional = true
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = [
+    "app/__pycache__/*",
+    "tests/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+show_missing = true

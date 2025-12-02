@@ -1,0 +1,27 @@
+# Encadeador Service Environment Configuration
+# Copy to /etc/encadeador/environment and customize
+
+# Application version
+APP_VERSION=2.0.0
+
+# Logging
+LOG_LEVEL=INFO
+
+# AWS Configuration
+AWS_REGION=us-east-1
+# AWS_ACCESS_KEY_ID=  # Use IAM roles in production
+# AWS_SECRET_ACCESS_KEY=  # Use IAM roles in production
+
+# S3 Configuration
+DEFAULT_DECOMP_BUCKET=decomp-bucket
+DEFAULT_NEWAVE_BUCKET=newave-bucket
+# S3_ENDPOINT_URL=  # Only for LocalStack/MinIO
+
+# Source mode (S3 or FS)
+DECOMP_SOURCE=S3
+NEWAVE_SOURCE=S3
+
+# Processing
+TEMP_DIR=/tmp/encadeador
+MAX_TEMP_DIR_AGE_HOURS=24
+ZIP_COMPRESSION_LEVEL=6

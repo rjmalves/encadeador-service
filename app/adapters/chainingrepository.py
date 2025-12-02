@@ -1,17 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Union, Callable
+from collections.abc import Callable
+
 import pandas as pd  # type: ignore
 from idecomp.decomp.dadger import Dadger
-from idecomp.decomp.modelos.dadger import VI, UH
+from idecomp.decomp.modelos.dadger import UH, VI
 
-from app.models.program import Program
-from app.models.chainingresult import ChainingResult
 from app.internal.httpresponse import HTTPResponse
+from app.models.chainingresult import ChainingResult
 from app.models.chainingvariable import ChainingVariable
+from app.models.program import Program
 from app.services.unitofwork import (
     AbstractUnitOfWork,
-    NewaveUnitOfWork,
     DecompUnitOfWork,
+    NewaveUnitOfWork,
 )
 from app.utils.log import Log
 
@@ -22,10 +23,10 @@ class AbstractChainingRepository(ABC):
     async def chain(
         self,
         variable: ChainingVariable,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
-        RULES: Dict[ChainingVariable, Callable] = {
+    ) -> list[ChainingResult] | HTTPResponse:
+        RULES: dict[ChainingVariable, Callable] = {
             ChainingVariable.VARM: self.chain_varm,
             ChainingVariable.TVIAGEM: self.chain_tviagem,
             ChainingVariable.GNL: self.chain_gnl,
@@ -39,33 +40,33 @@ class AbstractChainingRepository(ABC):
     @abstractmethod
     async def chain_varm(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         pass
 
     @abstractmethod
     async def chain_tviagem(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         pass
 
     @abstractmethod
     async def chain_gnl(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         pass
 
     @abstractmethod
     async def chain_ena(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         pass
 
 
@@ -74,9 +75,9 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
 
     async def chain_varm(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         def __numero_uhe_decomp(numero_newave: int) -> int:
             mapa_ficticias_NW_DC = {
                 318: 122,
@@ -90,7 +91,7 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
                 303: 257,
                 306: 253,
             }
-            if numero_newave in mapa_ficticias_NW_DC.keys():
+            if numero_newave in mapa_ficticias_NW_DC:
                 return mapa_ficticias_NW_DC[numero_newave]
             else:
                 return numero_newave
@@ -113,12 +114,8 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
             Log.log().info(f"Caso especial de I. Solteira Equiv: {vol} %")
             usinas.loc[usinas["codigo_usina"] == 34, "inicial"] = vol
             usinas.loc[usinas["codigo_usina"] == 43, "inicial"] = vol
-            results.append(
-                ChainingResult(id=hidr.at[34, "nome_usina"], value=vol)
-            )
-            results.append(
-                ChainingResult(id=hidr.at[43, "nome_usina"], value=vol)
-            )
+            results.append(ChainingResult(id=hidr.at[34, "nome_usina"], value=vol))
+            results.append(ChainingResult(id=hidr.at[43, "nome_usina"], value=vol))
             return usinas
 
         def __correcao_serra_mesa_ficticia(vol: float) -> float:
@@ -151,9 +148,7 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
 
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
-            return HTTPResponse(
-                code=422, detail="must have at least 1 DECOMP source"
-            )
+            return HTTPResponse(code=422, detail="must have at least 1 DECOMP source")
         last_decomp_uow = decomps_uow[-1]
         assert isinstance(last_decomp_uow, DecompUnitOfWork)
 
@@ -181,11 +176,9 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
         hidr = arq_hidr.cadastro
         usinas = arq_confhd.usinas
         if usinas is None:
-            return HTTPResponse(
-                code=500, detail="erro na leitura das usinas do confhd"
-            )
+            return HTTPResponse(code=500, detail="erro na leitura das usinas do confhd")
 
-        results: List[ChainingResult] = []
+        results: list[ChainingResult] = []
         # Atualiza cada armazenamento
         for _, linha in usinas.iterrows():
             num = linha["codigo_usina"]
@@ -208,12 +201,8 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
                     ChainingResult(id=hidr.at[num_nw, "nome_usina"], value=vf)
                 )
 
-            usinas.loc[
-                usinas["codigo_usina"] == num, "volume_inicial_percentual"
-            ] = vol
-            results.append(
-                ChainingResult(id=hidr.at[num, "nome_usina"], value=vol)
-            )
+            usinas.loc[usinas["codigo_usina"] == num, "volume_inicial_percentual"] = vol
+            results.append(ChainingResult(id=hidr.at[num, "nome_usina"], value=vol))
 
         # Trata o caso de I. Solteira Equiv.
         if __separou_ilha_solteira_equiv(volumes, usinas):
@@ -228,23 +217,23 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
 
     async def chain_tviagem(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         return HTTPResponse(code=405, detail="TVIAGEM not allowed for NEWAVE")
 
     async def chain_gnl(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         return HTTPResponse(code=501, detail="GNL not implemented for NEWAVE")
 
     async def chain_ena(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         return HTTPResponse(code=501, detail="ENA not implemented for NEWAVE")
 
 
@@ -253,14 +242,12 @@ class DECOMPChainingRepository(AbstractChainingRepository):
 
     async def chain_varm(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
-            return HTTPResponse(
-                code=422, detail="must have at least 1 DECOMP source"
-            )
+            return HTTPResponse(code=422, detail="must have at least 1 DECOMP source")
         last_decomp_uow = decomps_uow[-1]
         assert isinstance(last_decomp_uow, DecompUnitOfWork)
 
@@ -274,9 +261,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
             vols_relato = volumes["codigo_usina"].tolist()
 
             existe_equiv_relato = 44 in vols_relato
-            existem_separadas_relato = all(
-                [34 in vols_relato, 43 in vols_relato]
-            )
+            existem_separadas_relato = all([34 in vols_relato, 43 in vols_relato])
             existe_equiv_dadger = dadger.uh(44) is not None
             existem_separadas_dadger = (dadger.uh(34) is not None) and (
                 dadger.uh(43) is not None
@@ -290,12 +275,8 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                 ]
             )
 
-        def __encadeia_ilha_solteira_equiv(
-            volumes: pd.DataFrame, dadger: Dadger
-        ):
-            vol = volumes.loc[volumes["codigo_usina"] == 44, "estagio_1"].iloc[
-                0
-            ]
+        def __encadeia_ilha_solteira_equiv(volumes: pd.DataFrame, dadger: Dadger):
+            vol = volumes.loc[volumes["codigo_usina"] == 44, "estagio_1"].iloc[0]
 
             Log.log().info(f"Caso especial de I. Solteira Equiv: {vol} %")
             for codigo_uh in [34, 43]:
@@ -327,7 +308,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                 code=500, detail="erro na leitura dos volumes do relato"
             )
 
-        results: List[ChainingResult] = []
+        results: list[ChainingResult] = []
         # Encadeia cada armazenamento
         for _, linha in volumes.iterrows():
             num = linha["codigo_usina"]
@@ -337,16 +318,12 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                 __encadeia_ilha_solteira_equiv(volumes, dadger)
                 continue
 
-            vol = volumes.loc[
-                volumes["codigo_usina"] == num, "estagio_1"
-            ].iloc[0]
+            vol = volumes.loc[volumes["codigo_usina"] == num, "estagio_1"].iloc[0]
 
             uh = dadger.uh(num)
             assert isinstance(uh, UH)
             uh.volume_inicial = vol
-            results.append(
-                ChainingResult(id=hidr.at[num, "nome_usina"], value=vol)
-            )
+            results.append(ChainingResult(id=hidr.at[num, "nome_usina"], value=vol))
 
         with destination_uow:
             res = destination_uow.files.set_dadger(dadger)
@@ -357,17 +334,15 @@ class DECOMPChainingRepository(AbstractChainingRepository):
 
     async def chain_tviagem(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
-        def __codigos_usinas_tviagem() -> List[int]:
+    ) -> list[ChainingResult] | HTTPResponse:
+        def __codigos_usinas_tviagem() -> list[int]:
             return [156, 162]
 
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
-            return HTTPResponse(
-                code=422, detail="must have at least 1 DECOMP source"
-            )
+            return HTTPResponse(code=422, detail="must have at least 1 DECOMP source")
         last_decomp_uow = decomps_uow[-1]
         assert isinstance(last_decomp_uow, DecompUnitOfWork)
 
@@ -399,13 +374,12 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                 detail="erro na leitura do relatório das UHEs do relato",
             )
 
-        results: List[ChainingResult] = []
+        results: list[ChainingResult] = []
         # Encadeia cada tempo de viagem
         for codigo in __codigos_usinas_tviagem():
             # Extrai o Qdef do relato
             qdef = relatorio.loc[
-                (relatorio["estagio"] == 1)
-                & (relatorio["codigo_usina"] == codigo),
+                (relatorio["estagio"] == 1) & (relatorio["codigo_usina"] == codigo),
                 "vazao_defluente_m3s",
             ].iloc[0]
 
@@ -417,9 +391,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
             vazoes_anteriores = vi_ant.vazao
             assert isinstance(vazoes_anteriores, list)
             vi_novo.vazao = [qdef] + vazoes_anteriores[:-1]
-            results.append(
-                ChainingResult(id=hidr.at[codigo, "nome_usina"], value=qdef)
-            )
+            results.append(ChainingResult(id=hidr.at[codigo, "nome_usina"], value=qdef))
 
         with destination_uow:
             res = destination_uow.files.set_dadger(dadger)
@@ -430,14 +402,12 @@ class DECOMPChainingRepository(AbstractChainingRepository):
 
     async def chain_gnl(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
-            return HTTPResponse(
-                code=422, detail="must have at least 1 DECOMP source"
-            )
+            return HTTPResponse(code=422, detail="must have at least 1 DECOMP source")
         last_decomp_uow = decomps_uow[-1]
         assert isinstance(last_decomp_uow, DecompUnitOfWork)
 
@@ -466,7 +436,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
             )
         cods = usinas_termicas["codigo_usina"].unique()
         usinas = usinas_termicas["nome_usina"].unique()
-        mapa_codigo_usina = {c: u for c, u in zip(cods, usinas)}
+        mapa_codigo_usina = dict(zip(cods, usinas, strict=False))
 
         registros_nl = dad.nl()
         assert isinstance(registros_nl, list)
@@ -477,7 +447,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
         registros_anteriores = dad_anterior.gl()
         assert isinstance(registros_anteriores, list)
 
-        results: List[ChainingResult] = []
+        results: list[ChainingResult] = []
         for c in codigos:
             # Para cada semana i (exceto a última), o registro GL do DadGNL do
             # caso atual deve ter o valor do respectivo registro GL do DadGNL
@@ -510,11 +480,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                             "registro GL do dadgnl",
                         )
                     data = (
-                        data_inicio[:2]
-                        + "/"
-                        + data_inicio[2:4]
-                        + "/"
-                        + data_inicio[4:]
+                        data_inicio[:2] + "/" + data_inicio[2:4] + "/" + data_inicio[4:]
                     )
                     # Procura pela linha em op filtrando por nome, data
                     # e pegando as colunas dos despachos
@@ -523,7 +489,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                         op["data_inicio_semana"] == data
                     )
                     geracoes = op.loc[filtro, cols_despacho].to_numpy()
-                    r.geracao = [g for g in geracoes[0]]
+                    r.geracao = list(geracoes[0])
                     results.append(ChainingResult(id=nome, value=geracoes[-1]))
                 else:
                     # Procura pelo registro anterior com a mesma data
@@ -543,9 +509,9 @@ class DECOMPChainingRepository(AbstractChainingRepository):
 
     async def chain_ena(
         self,
-        sources_uow: List[AbstractUnitOfWork],
+        sources_uow: list[AbstractUnitOfWork],
         destination_uow: AbstractUnitOfWork,
-    ) -> Union[List[ChainingResult], HTTPResponse]:
+    ) -> list[ChainingResult] | HTTPResponse:
         return HTTPResponse(code=405, detail="ENA not allowed for DECOMP")
 
 
@@ -556,7 +522,5 @@ SUPPORTED_PROGRAMS = {
 DEFAULT = DECOMPChainingRepository
 
 
-def factory(
-    destination: Program, *args, **kwargs
-) -> AbstractChainingRepository:
+def factory(destination: Program, *args, **kwargs) -> AbstractChainingRepository:
     return SUPPORTED_PROGRAMS.get(destination, DEFAULT)(*args, **kwargs)

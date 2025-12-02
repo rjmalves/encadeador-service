@@ -1,5 +1,5 @@
 import io
-from unittest.mock import MagicMock, DEFAULT
+from unittest.mock import DEFAULT, MagicMock
 
 file_spec = None
 
@@ -56,8 +56,7 @@ def mock_open(mock=None, read_data=""):
         if handle.readline.return_value is not None:
             while True:
                 yield handle.readline.return_value
-        for line in _state[0]:
-            yield line
+        yield from _state[0]
 
     def _next_side_effect():
         if handle.readline.return_value is not None:
@@ -68,9 +67,7 @@ def mock_open(mock=None, read_data=""):
     if file_spec is None:
         import _io  # type: ignore
 
-        file_spec = list(
-            set(dir(_io.TextIOWrapper)).union(set(dir(_io.BytesIO)))
-        )
+        file_spec = list(set(dir(_io.TextIOWrapper)).union(set(dir(_io.BytesIO))))
 
     if mock is None:
         mock = MagicMock(name="open", spec=open)

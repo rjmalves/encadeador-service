@@ -1,0 +1,60 @@
+[Unit]
+Description=Encadeador Service (Docker)
+Documentation=https://github.com/your-org/encadeador-service
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=docker
+
+# Environment file for configuration
+EnvironmentFile=-/etc/encadeador/environment
+
+# Working directory
+WorkingDirectory=/opt/encadeador
+
+# Pre-start: Pull latest image and stop existing container
+ExecStartPre=-/usr/bin/docker stop encadeador-service
+ExecStartPre=-/usr/bin/docker rm encadeador-service
+ExecStartPre=/usr/bin/docker pull encadeador-service:${APP_VERSION:-2.0.0}
+
+# Start command
+ExecStart=/usr/bin/docker run --rm \
+    --name encadeador-service \
+    --env-file /etc/encadeador/environment \
+    -p 8001:8000 \
+    --health-cmd="curl -f http://localhost:8000/health/live || exit 1" \
+    --health-interval=30s \
+    --health-timeout=10s \
+    --health-retries=3 \
+    --memory=2g \
+    --cpus=2 \
+    --label "traefik.enable=true" \
+    --label "traefik.http.routers.encadeador.rule=PathPrefix(\`/encadeador\`)" \
+    --label "traefik.http.services.encadeador.loadbalancer.server.port=8000" \
+    --network hpc-network \
+    encadeador-service:${APP_VERSION:-2.0.0}
+
+# Stop command
+ExecStop=/usr/bin/docker stop encadeador-service
+
+# Restart policy
+Restart=always
+RestartSec=10s
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=encadeador
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

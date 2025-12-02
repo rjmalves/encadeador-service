@@ -1,229 +1,226 @@
-# encadeador-service
-Serviço para realização de encadeamento de resultados em casos de NEWAVE / DECOMP / DESSEM para a realização de estudos encadeados. Este serviço é fornecido por meio de uma API REST contendo uma única rota, que recebe os argumentos necessários para realizar a transferência de resultados finais de um caso para outro.
+# Encadeador Service
 
-Atualmente é esperado que este serviço seja lançado no próprio cluster, com acesso ao sistema de arquivos onde os casos que serão processados se encontram. Além disso, as variáveis que podem ser encadeadas dependem dos casos que estão sendo relacionados, dado que o DECOMP possui variáveis como o Tempo de Viagem, não representado no NEWAVE.
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+Service for chaining DECOMP and NEWAVE case results. Part of the HPC simulation services.
 
-## Instalação
+## Overview
 
-Para realizar a instalação a partir do repositório, é recomendado criar um ambiente virtual e realizar a instalação das dependências dentro do mesmo.
+The encadeador-service chains variables (VARM, TVIAGEM, GNL) from source case(s) to a destination case, enabling iterative simulation workflows. It works alongside the [flexibilizador-service](https://github.com/rjmalves/flexibilizador-service).
 
-```
-$ git clone https://github.com/rjmalves/encadeador-service
-$ cd encadeador-service
-$ python3 -m venv ./venv
-$ source ./venv/bin/activate
-$ pip install -r requirements.txt
-```
+### Features
 
-## Configuração
+- **S3 Integration**: Read artifacts from and write results to S3
+- **Docker Deployment**: Containerized with health checks
+- **Structured Errors**: Machine-readable error responses
+- **Legacy Support**: Backward compatible with filesystem mode
 
-A configuração do serviço pode ser feita através de um arquivo de variáveis de ambiente `.env`, existente no próprio diretório de instalação. O conteúdo deste arquivo:
+## Quick Start
 
-```
-CLUSTER_ID=1
-HOST="0.0.0.0"
-PORT=5053
-ROOT_PATH="/api/v1/chain"
-```
+### Prerequisites
 
-Cada deploy do `encadeador-service` deve ter um atributo `CLUSTER_ID` único, para que outros serviços possam controlar atividades em clusters distintos. 
+- Docker and Docker Compose
+- AWS credentials (for S3 mode)
 
-Atualmente as opções suportadas são:
+### Start with Docker Compose
 
-|       Campo       |   Valores aceitos   |
-| ----------------- | ------------------- |
-| CLUSTER_ID        | `int`               |
-| HOST              | `str`               |
-| PORT              | `int`               |
-| ROOT_PATH         | `str` (URL prefix)  |
+```bash
+# Clone repository
+git clone https://github.com/rjmalves/encadeador-service
+cd encadeador-service
 
-## Uso
+# Configure environment
+cp .env.example .env
+vim .env  # Set AWS credentials and buckets
 
-Para executar o programa, basta interpretar o arquivo `main.py`:
+# Start service
+docker compose up -d
 
-```
-$ source ./venv/bin/activate
-$ python main.py
+# Verify
+curl http://localhost:8001/health
 ```
 
-No terminal é impresso um log de acompanhamento:
+### Start for Development
 
-```
-INFO:     Started server process [2133]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:5053 (Press CTRL+C to quit)
-INFO:     127.0.0.1:36872 - "GET /docs HTTP/1.1" 200 OK
-INFO:     127.0.0.1:36872 - "GET /openapi.json HTTP/1.1" 200 OK
-```
+```bash
+# Start with LocalStack (S3 mock)
+docker compose -f docker-compose.dev.yml up -d
 
-
-Maiores detalhes sobre a rota disponível pode ser visto ao lançar a aplicação localmente e acessar a rota `/docs`, que possui uma página no formato [OpenAPI](https://swagger.io/specification/). Em geral, casos são referenciados por meio do seus caminhos no sistema de arquivos codificados em `base62` e o encadeamento é especificado por um mnemônico da variável a ser encadeada, que é enviado na requisição de encadeamento.
-
-
-## Variáveis Encadeadas
-
-Atualmente é suportado encadear até 4 variáveis operativas, não necessariamente entre todos os modelos que são utilizados para estudos encadeados.
-
-
-### Volume Armazenado (VARM)
-
-É assumido que, no ponto inicial de um estudo encadeado (por exemplo, um backtest), os volumes iniciais dos modelos são compatíveis. A implementação atual suporta o caso mais comum de execuções mensais de NEWAVE e semanais de DECOMP. Os volumes encadeados são sempre resultados de execuções de DECOMP, correspondentes aos valores finais de primeira semana de estudo.
-
-Encadeamentos suportados:
-
-- DECOMP -> NEWAVE
-
-O resultado da primeira semana de estudo da última revisão de DECOMP de um determinado mês é utilizada para encadeamento com os volumes iniciais do NEWAVE do mês seguinte. Os volumes são extraídos do arquivo `relato.rvX` e inseridos no `confhd.dat`.
-
-Como existem usinas com representações diferentes entre NEWAVE e DECOMP, existe um mapeamento constante no código que especifica a transferência de volumes a ser feita neste processo de encadeamento. São exceções implementadas:
-
-1. Mapeamento de usinas do DECOMP para fictícias do NEWAVE
-
-É declarado um mapa específico para usinas que são fictícias no NEWAVE:
-
-```python
-mapa_ficticias_NW_DC = {
-        318: 122,
-        319: 57,
-        294: 162,
-        295: 156,
-        308: 155,
-        298: 148,
-        292: 252,
-        302: 261,
-        303: 257,
-        306: 253,
-    }
+# Service available at http://localhost:8001
+# LocalStack S3 at http://localhost:4566
 ```
 
-2. Encadeamento de Serra de Mesa
+## API Usage
 
-Como a UHE 251 é representada como uma única usina no DECOMP, mas como uma usina real (251) e outra fictícia (291) no NEWAVE, é dado um tratamento especial no encadeamento ao transferir um volume do DECOMP para dois volumes do NEWAVE. Para a UHE 251, é transferido o volume integral decidido pelo DECOMP. Para a UHE 291, é realizada uma correção:
+### Chain Variables
 
-```python
-def __correcao_serra_mesa_ficticia(vol: float) -> float:
-    return min([100.0, vol / 0.55])
+```bash
+curl -X POST http://localhost:8001/chain/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sources": [{
+      "program": "DECOMP",
+      "bucket": "decomp-bucket",
+      "execution_hash": "source123"
+    }],
+    "destination": {
+      "program": "DECOMP",
+      "bucket": "decomp-bucket",
+      "execution_hash": "dest456"
+    },
+    "variable": "VARM"
+  }'
 ```
 
-3. Mudança na Representação de Ilha Solteira
-
-Em algum momento houve uma mudança na representação de Ilha Solteira (34) e Três Irmãos (43), que eram representadas como Ilha Solteira Equivalente (44). Desta forma, existe um encadeamento que irá enxergar usinas separadas no NEWAVE e a usina equivalente no DECOMP, dado que a transição ocorreu em um novo mês. O tratamento especial para este caso é transferir o volume da UHE 44 para ambas UHEs 34 e 43.
-
-```python
-def __encadeia_ilha_solteira_equiv(
-    volumes: pd.DataFrame, usinas: pd.DataFrame
-) -> pd.DataFrame:
-    vol = float(
-        volumes.loc[
-            volumes["codigo_usina"] == 44, "estagio_1"
-        ]
-    )
-    Log.log().info(f"Caso especial de I. Solteira Equiv: {vol} %")
-    usinas.loc[usinas["codigo_usina"] == 34, "inicial"] = vol
-    usinas.loc[usinas["codigo_usina"] == 43, "inicial"] = vol
-    results.append(
-        ChainingResult(id=hidr.at[34, "nome_usina"], value=vol)
-    )
-    results.append(
-        ChainingResult(id=hidr.at[43, "nome_usina"], value=vol)
-    )
-    return usinas
-```
-
-- DECOMP -> DECOMP
-
-O resultado da primeira semana de estudo do DECOMP anterior é utilizado para os volumes iniciais do próximo DECOMP. O único caso especial tratado neste encadeamento é a mudança na representação de Ilha Solteira, que foi descrita na seção anterior e é implementado por:
-
-```python
-def __encadeia_ilha_solteira_equiv(
-    volumes: pd.DataFrame, dadger: Dadger
-):
-    vol = float(
-        volumes.loc[volumes["codigo_usina"] == 44, "estagio_1"]
-    )
-    Log.log().info(f"Caso especial de I. Solteira Equiv: {vol} %")
-    dadger.uh(34).volume_inicial = vol
-    dadger.uh(43).volume_inicial = vol
-    results.append(
-        ChainingResult(id=hidr.at[34, "nome_usina"], value=vol)
-    )
-    results.append(
-        ChainingResult(id=hidr.at[43, "nome_usina"], value=vol)
-    )
-```
-
-### Tempo de Viagem da Água (TVIAGEM)
-
-O tempo de viagem de água atualmente só é suportado no modelo DECOMP, por meio dos registros `VI` no arquivo `dadger.rvX`. Logo, apenas é suportado o encadeamento de `TVIAGEM` entre execuções do modelo DECOMP. O tempo de viagem é representado apenas para as usinas de Três Marias (156) e Queimado (162).
-
-- DECOMP -> DECOMP
-
-Para realizar o encadeamento, o resultado de vazão defluente da primeira semana de uma usina é extraído do arquivo `relato.rvX` e é adicionado à primeira posição do registro `VI` da mesma usina no DECOMP seguinte, sendo complementado pelas demais entradas do registro `VI` do `dadger.rvX` do DECOMP anterior.
-
-```python
-...
-relatorio = relato.relatorio_operacao_uhe
-results: List[ChainingResult] = []
-# Encadeia cada tempo de viagem
-for codigo in __codigos_usinas_tviagem():
-    # Extrai o Qdef do relato
-    qdef = float(
-        relatorio.loc[
-            (relatorio["estagio"] == 1)
-            & (relatorio["codigo_usina"] == codigo),
-            "vazao_defluente_m3s",
-        ]
-    )
-    # Atualiza os tempos de viagem no dadger
-    vi: VI = dadger_ant.vi(codigo)
-    dadger.vi(codigo).vazao = [qdef] + vi.vazao[:-1]
-    results.append(
-        ChainingResult(id=hidr.at[codigo, "nome_usina"], value=qdef)
-    )
-...
-
-```
-
-### Despacho Programado de Usinas a Gás Natural Liquefeito (GNL)
-
-O despacho das usinas térmicas GNL atualmente possui apenas suporte ao encadeamento também entre execuções do modelo DECOMP. Em versões antigas do sistema de encadeamento, era suportada a transferência também no modelo NEWAVE, que foi descontinuada e deve ser reestabelecida em versões futuras.
-
-- DECOMP -> DECOMP
-
-São extraídas informações dos arquivos `dadgnl.rvX` e `relgnl.rvX` do DECOMP anterior e adicionadas ao arquivo `dadgnl.rvX` do DECOMP seguinte, com regras específicas para tratar a entrada de usinas novas em operação e as semanas para as quais foi determinado o despacho.
-
-
-### Previsão de Energia Natural Afluente (ENA)
-
-O encadeamento da previsão de ENA foi descontinuado na versão atual do serviço e deve ser reestabelecida em versões futuras.
-
-
-## Rota Fornecida pelo Serviço
-
-A única rota fornecida pelo serviço é `POST /chain`, onde o corpo do objeto `JSON` contém o seguinte formato:
+### Response
 
 ```json
 {
-    "sources": [
-        {
-        "id": "IgMI7zzpD0irzRysgz7ia2z2KbKEIQEpZ2GpEhUvJGvNxpMlD65iC9oeOQ4",
-        "program": "DECOMP"
-        }
-    ],
-    "destination": {
-        "id": "IgMI7zzpD0irzRysgz7ia2z2KbKEIQEpZ2GpEhUvJGvNxpMlD65lJjqJqsv",
-        "program": "NEWAVE"
-    },
-    "variable": "VARM"
+  "result": [
+    {"id": "TUCURUI", "value": 45.5},
+    {"id": "SOBRADINHO", "value": 32.1}
+  ],
+  "output_key": "ingest/dest456_encadeado.zip",
+  "output_bucket": "decomp-bucket"
 }
 ```
 
-Os campos informados são:
+### Health Check
 
-- `sources`: Uma lista de casos excutados anteriormente, em ordem cronológica, que podem ser utilizados para definição das informações de entrada do caso que está sendo encadeado. Um caso é resumido a um atributo `id`, que é o caminho para o diretório do caso codificado em `base62`, e um atributo `program` para o nome do programa. Atualmente somente casos de `DECOMP` são suportados como fonte das variáveis.  
-- `destination`: Um caso, representado da mesma maneira do campo anterior, para ser alvo do encadeamento.  
-- `variable`: Um dos mnemônicos suportados para definir a variável encadeada.
+```bash
+curl http://localhost:8001/health
+# {"status":"healthy","version":"2.0.0","timestamp":"..."}
 
-A resposta, se flexibilização for realizada com sucesso, contém um objeto com uma lista de `ChainingReult`, que são pares do tipo [`id`, `value`], onde o significado de cada campo pode variar conforma a variável encadeada. Para o caso de volumes armazenados, `id` possui o nome da usina e `value` o volume que foi transferido.
+curl http://localhost:8001/health/ready
+# {"ready":true,"checks":{"temp_dir":true,"s3":true}}
+```
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AWS_REGION` | AWS region | us-east-1 |
+| `DEFAULT_DECOMP_BUCKET` | DECOMP bucket | decomp-bucket |
+| `DEFAULT_NEWAVE_BUCKET` | NEWAVE bucket | newave-bucket |
+| `S3_ENDPOINT_URL` | Custom S3 endpoint | - |
+| `LOG_LEVEL` | Logging level | INFO |
+| `DECOMP_SOURCE` | Source mode (S3 or FS) | S3 |
+| `NEWAVE_SOURCE` | Source mode (S3 or FS) | S3 |
+
+See [.env.example](.env.example) for all variables.
+
+## Documentation
+
+- [Deployment Guide](docs/DEPLOYMENT.md) - Docker and systemd deployment
+- [Migration Guide](docs/MIGRATION.md) - Migrating from v1.x to v2.0
+- [API Documentation](http://localhost:8001/docs) - OpenAPI/Swagger (when running)
+- [CHANGELOG](CHANGELOG.md) - Version history
+
+## Development
+
+### Setup
+
+```bash
+# Install uv package manager
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies
+uv sync
+
+# Run locally
+uv run uvicorn main:app --reload --port 8001
+```
+
+### Testing
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=app
+
+# Run specific tests
+uv run pytest tests/unit/
+```
+
+### Linting
+
+```bash
+# Check code
+uv run ruff check .
+
+# Format code
+uv run ruff format .
+
+# Type check
+uv run mypy app/
+```
+
+## Project Structure
+
+```
+encadeador-service/
+├── app/
+│   ├── adapters/       # Repository implementations
+│   ├── internal/       # Settings, exceptions
+│   ├── models/         # Pydantic models
+│   ├── routers/        # API endpoints
+│   ├── services/       # Business logic (UnitOfWork)
+│   └── utils/          # Utilities
+├── tests/
+│   ├── unit/           # Unit tests
+│   └── integration/    # Integration tests
+├── deploy/             # Deployment files
+├── docs/               # Documentation
+├── Dockerfile          # Container definition
+├── docker-compose.yml  # Production compose
+└── pyproject.toml      # Project configuration
+```
+
+## Chained Variables
+
+The following variables can be chained between model executions:
+
+| Variable | Source | Destination | Description |
+| -------- | ------ | ----------- | ----------- |
+| `VARM` | DECOMP | DECOMP, NEWAVE | Reservoir volumes |
+| `TVIAGEM` | DECOMP | DECOMP | Water travel times |
+| `GNL` | DECOMP | DECOMP | GNL dispatch |
+| `ENA` | (deprecated) | - | Energy inflow forecast |
+
+### VARM (Reservoir Volumes)
+
+Chains initial reservoir volumes from source to destination case. Supports DECOMP → DECOMP and DECOMP → NEWAVE chaining. Handles special cases like Serra da Mesa and Ilha Solteira equivalent representations.
+
+### TVIAGEM (Water Travel Time)
+
+Chains water travel times for Três Marias (156) and Queimado (162) plants. Only supported for DECOMP → DECOMP.
+
+### GNL (GNL Dispatch)
+
+Chains GNL thermal plant dispatch schedules. Only supported for DECOMP → DECOMP.
+
+## Related Services
+
+- [flexibilizador-service](https://github.com/rjmalves/flexibilizador-service) - Flexibilization service
+- Both services will be unified in a future release
+
+## License
+
+[MIT License](LICENSE)
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make changes with tests
+4. Submit a pull request
+
+## Support
+
+- File issues at [GitHub Issues](https://github.com/rjmalves/encadeador-service/issues)
+- Check [Deployment Guide](docs/DEPLOYMENT.md) for troubleshooting
