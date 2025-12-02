@@ -220,7 +220,9 @@ class TestRequestIdGeneration:
             response = client.get(endpoint)
             data = response.json()
             assert "request_id" in data, f"Missing request_id in {endpoint}"
-            assert data["request_id"].startswith("req-"), f"Invalid request_id format in {endpoint}"
+            assert data["request_id"].startswith("req-"), (
+                f"Invalid request_id format in {endpoint}"
+            )
 
     def test_request_ids_are_unique(self, client):
         """Test that each request gets unique ID."""

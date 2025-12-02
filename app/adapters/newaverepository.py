@@ -85,42 +85,26 @@ class RawNewaveRepository(AbstractNewaveRepository):
         except FileNotFoundError:
             Log.log().error("Não foi encontrado o arquivo caso.dat")
         self.__arquivos: Arquivos | None = None
-        self.__dger: Dger | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__dger: Dger | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_dger = False
-        self.__hidr: Hidr | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__hidr: Hidr | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_hidr = False
-        self.__confhd: Confhd | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__confhd: Confhd | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_confhd = False
-        self.__eafpast: Eafpast | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__eafpast: Eafpast | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_eafpast = False
-        self.__adterm: Adterm | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__adterm: Adterm | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_adterm = False
-        self.__term: Term | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__term: Term | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_term = False
-        self.__pmo: Pmo | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__pmo: Pmo | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_pmo = False
 
     @property
     def arquivos(self) -> Arquivos | HTTPResponse:
         if self.__arquivos is None:
             try:
-                self.__arquivos = Arquivos.read(
-                    join(self.__path, self.__caso.arquivos)
-                )
+                self.__arquivos = Arquivos.read(join(self.__path, self.__caso.arquivos))
             except FileNotFoundError:
                 msg = f"Não foi encontrado o arquivo {self.__caso.arquivos}"
                 Log.log().error(msg)
@@ -330,7 +314,7 @@ class RawNewaveRepository(AbstractNewaveRepository):
 class TestNewaveRepository(AbstractNewaveRepository):
     """Test repository for NEWAVE - only used in testing environment."""
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, _path: str) -> None:
         super().__init__()
         # Import mocks only when needed (not available in production)
         from tests.mocks.arquivos.newave.arquivos import MockArquivos

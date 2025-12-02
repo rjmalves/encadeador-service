@@ -36,7 +36,7 @@ class HealthStatus(BaseModel):
         examples=["healthy", "degraded", "unhealthy"],
     )
     version: str | None = Field(
-        None,
+        default=None,
         description="Application version",
         examples=["2.0.0"],
     )
@@ -45,7 +45,7 @@ class HealthStatus(BaseModel):
         description="ISO 8601 timestamp",
         examples=["2024-12-01T12:00:00Z"],
     )
-    details: dict | None = Field(None, description="Additional health details")
+    details: dict | None = Field(default=None, description="Additional health details")
 
 
 class LivenessStatus(BaseModel):

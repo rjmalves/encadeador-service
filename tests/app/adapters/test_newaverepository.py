@@ -1,32 +1,33 @@
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
 import pytest
-from unittest.mock import MagicMock, patch
-from tests.mocks.mock_open import mock_open
+from inewave.newave.adterm import Adterm
+from inewave.newave.arquivos import Arquivos
+from inewave.newave.confhd import Confhd
+from inewave.newave.dger import Dger
+from inewave.newave.eafpast import Eafpast
+from inewave.newave.hidr import Hidr
+from inewave.newave.pmo import Pmo
+from inewave.newave.term import Term
+
+from app.adapters.newaverepository import factory
+from tests.mocks.arquivos.newave.adterm import MockAdterm
 from tests.mocks.arquivos.newave.arquivos import (
     MockArquivos,
 )
-from tests.mocks.arquivos.newave.dger import MockDger
 from tests.mocks.arquivos.newave.confhd import MockConfhd
+from tests.mocks.arquivos.newave.dger import MockDger
 from tests.mocks.arquivos.newave.eafpast import MockEafpast
-from tests.mocks.arquivos.newave.adterm import MockAdterm
-from tests.mocks.arquivos.newave.term import MockTerm
 from tests.mocks.arquivos.newave.pmo import MockPMO
-from inewave.newave.arquivos import Arquivos
-from inewave.newave.dger import Dger
-from inewave.newave.confhd import Confhd
-from inewave.newave.hidr import Hidr
-from inewave.newave.eafpast import Eafpast
-from inewave.newave.adterm import Adterm
-from inewave.newave.term import Term
-from inewave.newave.pmo import Pmo
-from app.adapters.newaverepository import factory
-
+from tests.mocks.arquivos.newave.term import MockTerm
+from tests.mocks.mock_open import mock_open
 
 DIR_TESTE = "./tests/mocks/arquivos/newave/"
 
 
 @pytest.mark.asyncio
-async def test_arquivos_newave(mocker):
+async def test_arquivos_newave():
     m: MagicMock = mock_open(read_data="arquivos.py")
     with patch("builtins.open", m):
         repo = factory("FS", DIR_TESTE)

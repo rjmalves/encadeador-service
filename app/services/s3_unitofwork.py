@@ -5,6 +5,7 @@ This module provides UnitOfWork classes that download artifacts from S3,
 process them locally, and upload results back to S3.
 """
 
+from contextlib import AbstractAsyncContextManager
 from pathlib import Path
 
 from app.adapters.decomprepository import (
@@ -65,7 +66,7 @@ class S3DecompUnitOfWork(AbstractUnitOfWork):
         self._temp_dir: Path | None = None
         self._decomp: RawDecompRepository | None = None
         self._output_key: str | None = None
-        self._temp_context = None
+        self._temp_context: AbstractAsyncContextManager[Path] | None = None
 
     async def __aenter__(self) -> "S3DecompUnitOfWork":
         """Enter context: download artifacts and setup repository."""
@@ -111,7 +112,9 @@ class S3DecompUnitOfWork(AbstractUnitOfWork):
         assert self._temp_dir is not None
 
         # First download caso.dat to determine file extension
-        caso_key = f"{Settings.s3_artifacts_prefix}/{self._execution_hash}/saidas/caso.dat"
+        caso_key = (
+            f"{Settings.s3_artifacts_prefix}/{self._execution_hash}/saidas/caso.dat"
+        )
         caso_path = self._temp_dir / "caso.dat"
 
         try:
@@ -128,7 +131,9 @@ class S3DecompUnitOfWork(AbstractUnitOfWork):
         Log.log().info(f"Source case extension: {ext}")
 
         # Download relato.{ext}
-        relato_key = f"{Settings.s3_artifacts_prefix}/{self._execution_hash}/saidas/relato.{ext}"
+        relato_key = (
+            f"{Settings.s3_artifacts_prefix}/{self._execution_hash}/saidas/relato.{ext}"
+        )
         relato_path = self._temp_dir / f"relato.{ext}"
         await self._s3_repo.download_file(self._bucket, relato_key, str(relato_path))
 
@@ -136,7 +141,9 @@ class S3DecompUnitOfWork(AbstractUnitOfWork):
         try:
             relgnl_key = f"{Settings.s3_artifacts_prefix}/{self._execution_hash}/saidas/relgnl.{ext}"
             relgnl_path = self._temp_dir / f"relgnl.{ext}"
-            await self._s3_repo.download_file(self._bucket, relgnl_key, str(relgnl_path))
+            await self._s3_repo.download_file(
+                self._bucket, relgnl_key, str(relgnl_path)
+            )
         except ArtifactNotFoundError:
             Log.log().info("relgnl not found (may not be needed)")
 
@@ -250,7 +257,7 @@ class S3NewaveUnitOfWork(AbstractUnitOfWork):
         self._temp_dir: Path | None = None
         self._newave: RawNewaveRepository | None = None
         self._output_key: str | None = None
-        self._temp_context = None
+        self._temp_context: AbstractAsyncContextManager[Path] | None = None
 
     async def __aenter__(self) -> "S3NewaveUnitOfWork":
         """Enter context: download artifacts and setup repository."""
@@ -295,14 +302,18 @@ class S3NewaveUnitOfWork(AbstractUnitOfWork):
         assert self._temp_dir is not None
 
         # Download pmo.dat from saidas
-        pmo_key = f"{Settings.s3_artifacts_prefix}/{self._execution_hash}/saidas/pmo.dat"
+        pmo_key = (
+            f"{Settings.s3_artifacts_prefix}/{self._execution_hash}/saidas/pmo.dat"
+        )
         pmo_path = self._temp_dir / "pmo.dat"
 
         Log.log().info(f"Downloading PMO from s3://{self._bucket}/{pmo_key}")
         await self._s3_repo.download_file(self._bucket, pmo_key, str(pmo_path))
 
         # Also need caso.dat and arquivos.dat for repository initialization
-        caso_key = f"{Settings.s3_artifacts_prefix}/{self._execution_hash}/saidas/caso.dat"
+        caso_key = (
+            f"{Settings.s3_artifacts_prefix}/{self._execution_hash}/saidas/caso.dat"
+        )
         caso_path = self._temp_dir / "caso.dat"
 
         try:

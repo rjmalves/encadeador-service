@@ -63,7 +63,9 @@ class TestAsyncTempDirectory:
     @pytest.mark.asyncio
     async def test_async_temp_directory_creates_dir(self, temp_base):
         """Test that async_temp_directory creates a directory."""
-        async with async_temp_directory(base_dir=str(temp_base), prefix="async_") as temp_dir:
+        async with async_temp_directory(
+            base_dir=str(temp_base), prefix="async_"
+        ) as temp_dir:
             assert temp_dir.exists()
             assert temp_dir.is_dir()
             assert "async_" in temp_dir.name
@@ -130,6 +132,7 @@ class TestCleanupOldTempDirs:
         # Make it "old" by setting mtime in the past
         old_time = time.time() - (25 * 3600)  # 25 hours ago
         import os
+
         os.utime(old_dir, (old_time, old_time))
 
         # Create recent directory
@@ -160,6 +163,7 @@ class TestCleanupOldTempDirs:
         # Make it old
         old_time = time.time() - (25 * 3600)
         import os
+
         os.utime(other_dir, (old_time, old_time))
 
         removed = cleanup_old_temp_dirs(base_dir=str(temp_base), max_age_hours=24)

@@ -71,7 +71,7 @@ class NewaveUnitOfWork(AbstractUnitOfWork):
     def __init__(self, directory: str):
         self._current_path = Path(curdir).resolve()
         self._case_directory = directory
-        self._newave = None
+        self._newave: AbstractNewaveRepository | None = None
 
     def __create_repository(self):
         if self._newave is None:
@@ -108,7 +108,7 @@ class DecompUnitOfWork(AbstractUnitOfWork):
     def __init__(self, directory: str):
         self._current_path = Path(curdir).resolve()
         self._case_directory = directory
-        self._decomp = None
+        self._decomp: AbstractDecompRepository | None = None
 
     def __create_repository(self):
         if self._decomp is None:

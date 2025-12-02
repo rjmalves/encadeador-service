@@ -1,10 +1,12 @@
-from dotenv import load_dotenv
-import uvicorn
 import os
 import pathlib
+
+import uvicorn
+from dotenv import load_dotenv
+
+from app.app import make_app
 from app.internal.settings import Settings
 from app.utils.log import Log
-from app.app import make_app
 
 BASEDIR = pathlib.Path().resolve()
 os.environ["APP_INSTALLDIR"] = os.path.dirname(os.path.abspath(__file__))

@@ -1,5 +1,6 @@
-import pathlib
 import os
+import pathlib
+
 from app.internal.settings import Settings
 from app.utils.log import Log
 

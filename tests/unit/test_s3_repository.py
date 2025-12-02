@@ -42,9 +42,7 @@ class TestS3RepositoryDownload:
         # Setup
         mock_s3.create_bucket(Bucket="test-bucket")
         mock_s3.put_object(
-            Bucket="test-bucket",
-            Key="path/to/file.txt",
-            Body=b"test content"
+            Bucket="test-bucket", Key="path/to/file.txt", Body=b"test content"
         )
 
         # Execute
@@ -87,9 +85,7 @@ class TestS3RepositoryDownload:
         """Test downloading file as bytes."""
         mock_s3.create_bucket(Bucket="test-bucket")
         mock_s3.put_object(
-            Bucket="test-bucket",
-            Key="data.bin",
-            Body=b"\x00\x01\x02\x03"
+            Bucket="test-bucket", Key="data.bin", Body=b"\x00\x01\x02\x03"
         )
 
         repo = S3Repository(region="us-east-1")
@@ -122,7 +118,9 @@ class TestS3RepositoryUpload:
 
         # Execute
         repo = S3Repository(region="us-east-1")
-        result = await repo.upload_file(str(local_path), "test-bucket", "uploaded/file.txt")
+        result = await repo.upload_file(
+            str(local_path), "test-bucket", "uploaded/file.txt"
+        )
 
         # Verify
         assert result == "uploaded/file.txt"
@@ -215,8 +213,5 @@ class TestS3RepositoryCustomEndpoint:
         """Test S3Repository works with custom endpoint."""
         # Note: moto doesn't fully support endpoint_url, but we verify
         # the client is created without errors
-        repo = S3Repository(
-            region="us-east-1",
-            endpoint_url="http://localhost:4566"
-        )
+        repo = S3Repository(region="us-east-1", endpoint_url="http://localhost:4566")
         assert repo._client is not None

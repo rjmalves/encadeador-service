@@ -114,12 +114,8 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
             Log.log().info(f"Caso especial de I. Solteira Equiv: {vol} %")
             usinas.loc[usinas["codigo_usina"] == 34, "inicial"] = vol
             usinas.loc[usinas["codigo_usina"] == 43, "inicial"] = vol
-            results.append(
-                ChainingResult(id=hidr.at[34, "nome_usina"], value=vol)
-            )
-            results.append(
-                ChainingResult(id=hidr.at[43, "nome_usina"], value=vol)
-            )
+            results.append(ChainingResult(id=hidr.at[34, "nome_usina"], value=vol))
+            results.append(ChainingResult(id=hidr.at[43, "nome_usina"], value=vol))
             return usinas
 
         def __correcao_serra_mesa_ficticia(vol: float) -> float:
@@ -152,9 +148,7 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
 
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
-            return HTTPResponse(
-                code=422, detail="must have at least 1 DECOMP source"
-            )
+            return HTTPResponse(code=422, detail="must have at least 1 DECOMP source")
         last_decomp_uow = decomps_uow[-1]
         assert isinstance(last_decomp_uow, DecompUnitOfWork)
 
@@ -182,9 +176,7 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
         hidr = arq_hidr.cadastro
         usinas = arq_confhd.usinas
         if usinas is None:
-            return HTTPResponse(
-                code=500, detail="erro na leitura das usinas do confhd"
-            )
+            return HTTPResponse(code=500, detail="erro na leitura das usinas do confhd")
 
         results: list[ChainingResult] = []
         # Atualiza cada armazenamento
@@ -209,12 +201,8 @@ class NEWAVEChainingRepository(AbstractChainingRepository):
                     ChainingResult(id=hidr.at[num_nw, "nome_usina"], value=vf)
                 )
 
-            usinas.loc[
-                usinas["codigo_usina"] == num, "volume_inicial_percentual"
-            ] = vol
-            results.append(
-                ChainingResult(id=hidr.at[num, "nome_usina"], value=vol)
-            )
+            usinas.loc[usinas["codigo_usina"] == num, "volume_inicial_percentual"] = vol
+            results.append(ChainingResult(id=hidr.at[num, "nome_usina"], value=vol))
 
         # Trata o caso de I. Solteira Equiv.
         if __separou_ilha_solteira_equiv(volumes, usinas):
@@ -259,9 +247,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
     ) -> list[ChainingResult] | HTTPResponse:
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
-            return HTTPResponse(
-                code=422, detail="must have at least 1 DECOMP source"
-            )
+            return HTTPResponse(code=422, detail="must have at least 1 DECOMP source")
         last_decomp_uow = decomps_uow[-1]
         assert isinstance(last_decomp_uow, DecompUnitOfWork)
 
@@ -275,9 +261,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
             vols_relato = volumes["codigo_usina"].tolist()
 
             existe_equiv_relato = 44 in vols_relato
-            existem_separadas_relato = all(
-                [34 in vols_relato, 43 in vols_relato]
-            )
+            existem_separadas_relato = all([34 in vols_relato, 43 in vols_relato])
             existe_equiv_dadger = dadger.uh(44) is not None
             existem_separadas_dadger = (dadger.uh(34) is not None) and (
                 dadger.uh(43) is not None
@@ -291,12 +275,8 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                 ]
             )
 
-        def __encadeia_ilha_solteira_equiv(
-            volumes: pd.DataFrame, dadger: Dadger
-        ):
-            vol = volumes.loc[volumes["codigo_usina"] == 44, "estagio_1"].iloc[
-                0
-            ]
+        def __encadeia_ilha_solteira_equiv(volumes: pd.DataFrame, dadger: Dadger):
+            vol = volumes.loc[volumes["codigo_usina"] == 44, "estagio_1"].iloc[0]
 
             Log.log().info(f"Caso especial de I. Solteira Equiv: {vol} %")
             for codigo_uh in [34, 43]:
@@ -338,16 +318,12 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                 __encadeia_ilha_solteira_equiv(volumes, dadger)
                 continue
 
-            vol = volumes.loc[
-                volumes["codigo_usina"] == num, "estagio_1"
-            ].iloc[0]
+            vol = volumes.loc[volumes["codigo_usina"] == num, "estagio_1"].iloc[0]
 
             uh = dadger.uh(num)
             assert isinstance(uh, UH)
             uh.volume_inicial = vol
-            results.append(
-                ChainingResult(id=hidr.at[num, "nome_usina"], value=vol)
-            )
+            results.append(ChainingResult(id=hidr.at[num, "nome_usina"], value=vol))
 
         with destination_uow:
             res = destination_uow.files.set_dadger(dadger)
@@ -366,9 +342,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
 
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
-            return HTTPResponse(
-                code=422, detail="must have at least 1 DECOMP source"
-            )
+            return HTTPResponse(code=422, detail="must have at least 1 DECOMP source")
         last_decomp_uow = decomps_uow[-1]
         assert isinstance(last_decomp_uow, DecompUnitOfWork)
 
@@ -405,8 +379,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
         for codigo in __codigos_usinas_tviagem():
             # Extrai o Qdef do relato
             qdef = relatorio.loc[
-                (relatorio["estagio"] == 1)
-                & (relatorio["codigo_usina"] == codigo),
+                (relatorio["estagio"] == 1) & (relatorio["codigo_usina"] == codigo),
                 "vazao_defluente_m3s",
             ].iloc[0]
 
@@ -418,9 +391,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
             vazoes_anteriores = vi_ant.vazao
             assert isinstance(vazoes_anteriores, list)
             vi_novo.vazao = [qdef] + vazoes_anteriores[:-1]
-            results.append(
-                ChainingResult(id=hidr.at[codigo, "nome_usina"], value=qdef)
-            )
+            results.append(ChainingResult(id=hidr.at[codigo, "nome_usina"], value=qdef))
 
         with destination_uow:
             res = destination_uow.files.set_dadger(dadger)
@@ -436,9 +407,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
     ) -> list[ChainingResult] | HTTPResponse:
         decomps_uow = [s for s in sources_uow if s.program == Program.DECOMP]
         if len(decomps_uow) == 0:
-            return HTTPResponse(
-                code=422, detail="must have at least 1 DECOMP source"
-            )
+            return HTTPResponse(code=422, detail="must have at least 1 DECOMP source")
         last_decomp_uow = decomps_uow[-1]
         assert isinstance(last_decomp_uow, DecompUnitOfWork)
 
@@ -467,7 +436,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
             )
         cods = usinas_termicas["codigo_usina"].unique()
         usinas = usinas_termicas["nome_usina"].unique()
-        mapa_codigo_usina = {c: u for c, u in zip(cods, usinas)}
+        mapa_codigo_usina = dict(zip(cods, usinas, strict=False))
 
         registros_nl = dad.nl()
         assert isinstance(registros_nl, list)
@@ -511,11 +480,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                             "registro GL do dadgnl",
                         )
                     data = (
-                        data_inicio[:2]
-                        + "/"
-                        + data_inicio[2:4]
-                        + "/"
-                        + data_inicio[4:]
+                        data_inicio[:2] + "/" + data_inicio[2:4] + "/" + data_inicio[4:]
                     )
                     # Procura pela linha em op filtrando por nome, data
                     # e pegando as colunas dos despachos
@@ -524,7 +489,7 @@ class DECOMPChainingRepository(AbstractChainingRepository):
                         op["data_inicio_semana"] == data
                     )
                     geracoes = op.loc[filtro, cols_despacho].to_numpy()
-                    r.geracao = [g for g in geracoes[0]]
+                    r.geracao = list(geracoes[0])
                     results.append(ChainingResult(id=nome, value=geracoes[-1]))
                 else:
                     # Procura pelo registro anterior com a mesma data
@@ -557,7 +522,5 @@ SUPPORTED_PROGRAMS = {
 DEFAULT = DECOMPChainingRepository
 
 
-def factory(
-    destination: Program, *args, **kwargs
-) -> AbstractChainingRepository:
+def factory(destination: Program, *args, **kwargs) -> AbstractChainingRepository:
     return SUPPORTED_PROGRAMS.get(destination, DEFAULT)(*args, **kwargs)

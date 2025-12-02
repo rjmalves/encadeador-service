@@ -73,29 +73,17 @@ class RawDecompRepository(AbstractDecompRepository):
         except FileNotFoundError:
             Log.log().error("Não foi encontrado o arquivo caso.dat")
         self.__arquivos: Arquivos | None = None
-        self.__dadger: Dadger | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__dadger: Dadger | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_dadger = False
-        self.__dadgnl: Dadgnl | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__dadgnl: Dadgnl | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_dadgnl = False
-        self.__relato: Relato | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__relato: Relato | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_relato = False
-        self.__relgnl: Relgnl | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__relgnl: Relgnl | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_relgnl = False
-        self.__inviabunic: InviabUnic | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__inviabunic: InviabUnic | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_inviabunic = False
-        self.__hidr: Hidr | HTTPResponse = HTTPResponse(
-            code=404, detail=""
-        )
+        self.__hidr: Hidr | HTTPResponse = HTTPResponse(code=404, detail="")
         self.__read_hidr = False
 
     @property
@@ -106,9 +94,7 @@ class RawDecompRepository(AbstractDecompRepository):
     def arquivos(self) -> Arquivos | HTTPResponse:
         if self.__arquivos is None:
             try:
-                self.__arquivos = Arquivos.read(
-                    join(self.__path, self.__caso.arquivos)
-                )
+                self.__arquivos = Arquivos.read(join(self.__path, self.__caso.arquivos))
             except FileNotFoundError:
                 msg = f"Não foi encontrado o arquivo {self.__caso.arquivos}"
                 Log.log().error(msg)
@@ -258,7 +244,7 @@ class RawDecompRepository(AbstractDecompRepository):
 class TestDecompRepository(AbstractDecompRepository):
     """Test repository for DECOMP - only used in testing environment."""
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, _path: str) -> None:
         super().__init__()
         # Import mocks only when needed (not available in production)
         from tests.mocks.arquivos.decomp.dadger import MockDadger
